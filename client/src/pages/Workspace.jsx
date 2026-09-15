@@ -230,7 +230,7 @@ export default function Workspace () {
         <div className="min-w-0">
           <p className="truncate text-sm text-ink">{script?.title}</p>
           <div className="mt-0.5 flex items-center gap-2.5">
-            <Status tone={state === 'SAVED' ? 'pencil' : busy ? 'graphite' : 'neutral'} pulse={busy}>
+            <Status tone={state === 'SAVED' ? 'brass' : busy ? 'graphite' : 'neutral'} pulse={busy}>
               {busy ? 'generating' : state.toLowerCase().replace('_', ' ')}
             </Status>
             <AnimatePresence>
@@ -314,7 +314,7 @@ export default function Workspace () {
                     <p className="mt-2.5 line-clamp-5 display text-sm leading-relaxed text-ink-tertiary">
                       {variation.script.sections.find((s) => s.kind === 'hook')?.body}
                     </p>
-                    <span className="mt-3 inline-block text-xs text-pencil opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="mt-3 inline-block text-xs text-brass opacity-0 transition-opacity group-hover:opacity-100">
                       Use this one →
                     </span>
                   </button>

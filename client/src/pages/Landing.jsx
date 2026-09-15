@@ -93,7 +93,7 @@ function Hero () {
                   because a perfect line reads as a border. */}
               <svg
                 viewBox="0 0 260 18" preserveAspectRatio="none" aria-hidden="true"
-                className="absolute -bottom-1 left-0 h-3 w-full text-pencil"
+                className="absolute -bottom-1 left-0 h-3 w-full text-brass"
               >
                 <motion.path
                   d="M3 12 C 60 5, 150 5, 256 9"
@@ -151,7 +151,7 @@ function Marquee () {
         {row.map((name, i) => (
           <span key={i} className="flex items-center gap-10">
             <span className="display text-lg text-ink-tertiary">{name}</span>
-            <span aria-hidden="true" className="h-1 w-1 rounded-full bg-pencil" />
+            <span aria-hidden="true" className="h-1 w-1 rounded-full bg-brass" />
           </span>
         ))}
       </div>
@@ -243,7 +243,7 @@ function Specimen () {
                 <span aria-hidden="true" className="h-3 w-[3px] bg-graphite" /> model
               </span>
               <span className="flex items-center gap-2 text-ink-tertiary">
-                <span aria-hidden="true" className="h-3 w-[3px] bg-pencil" /> you
+                <span aria-hidden="true" className="h-3 w-[3px] bg-brass" /> you
               </span>
             </div>
           </Reveal>
@@ -263,12 +263,12 @@ function Specimen () {
                     <span
                       aria-hidden="true"
                       className={`absolute left-0 top-1 h-[calc(100%-0.5rem)] w-[3px] ${
-                        section.author === 'creator' ? 'bg-pencil' : 'bg-graphite/50'
+                        section.author === 'creator' ? 'bg-brass' : 'bg-graphite/50'
                       }`}
                     />
                     <p className="label mb-2 text-ink-tertiary">
                       {section.kind}
-                      <span className={`ml-2 ${section.author === 'creator' ? 'text-pencil' : 'text-graphite'}`}>
+                      <span className={`ml-2 ${section.author === 'creator' ? 'text-brass' : 'text-graphite'}`}>
                         {section.author === 'creator' ? 'your words' : 'model'}
                       </span>
                     </p>
@@ -327,7 +327,7 @@ function Method () {
                 <div className="sm:col-span-2">
                   {/* Oversized numerals are the editorial device carrying this
                       section. They are the structure, not decoration. */}
-                  <span className="display text-4xl text-ink-faint transition-colors duration-DEFAULT group-hover:text-pencil">
+                  <span className="display text-4xl text-ink-faint transition-colors duration-DEFAULT group-hover:text-brass">
                     {step.n}
                   </span>
                 </div>
@@ -355,23 +355,23 @@ const PRINCIPLES = [
 
 function Principles () {
   return (
-    <section className="border-b border-rule bg-ink text-paper">
+    <section className="border-b border-rule bg-emerald text-emerald-ink">
       <div className="mx-auto max-w-shelf px-6 py-20 lg:px-10 lg:py-28">
         <Reveal>
-          <p className="label flex items-center gap-2.5 text-paper/50">
-            <span aria-hidden="true" className="h-px w-6 bg-pencil" />
+          <p className="label flex items-center gap-2.5 text-brass">
+            <span aria-hidden="true" className="h-px w-6 bg-brass" />
             What it refuses to do
           </p>
-          <p className="display mt-6 max-w-[20ch] text-[clamp(1.9rem,4vw,3.2rem)]">
+          <p className="display mt-6 max-w-[20ch] text-[clamp(1.9rem,4vw,3.2rem)] text-emerald-ink">
             A tool is defined by what it will not do to your work.
           </p>
         </Reveal>
 
-        <div className="mt-16 grid gap-px overflow-hidden bg-paper/15 sm:grid-cols-2">
+        <div className="mt-16 grid gap-px overflow-hidden bg-brass/25 sm:grid-cols-2">
           {PRINCIPLES.map(([title, body], i) => (
-            <Reveal key={title} delay={i * 0.05} className="bg-ink p-8 sm:p-10">
-              <h3 className="display text-lg text-paper">{title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-paper/60">{body}</p>
+            <Reveal key={title} delay={i * 0.05} className="bg-emerald p-8 sm:p-10">
+              <h3 className="display text-lg text-brass">{title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-emerald-ink/65">{body}</p>
             </Reveal>
           ))}
         </div>
@@ -388,7 +388,7 @@ function Closing () {
       <div className="mx-auto max-w-shelf px-6 py-24 text-center lg:px-10 lg:py-36">
         <Reveal>
           <p className="display display-tight mx-auto max-w-[13ch] text-[clamp(2.6rem,8vw,5.6rem)] text-ink">
-            Stop staring at the <span className="italic text-pencil">page</span>.
+            Stop staring at the <span className="italic text-brass">page</span>.
           </p>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-5">
             <Link to="/register"><Button variant="ink" size="lg">Start writing — free</Button></Link>

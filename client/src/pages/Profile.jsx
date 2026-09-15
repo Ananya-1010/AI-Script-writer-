@@ -118,7 +118,7 @@ export default function Profile () {
                     onClick={() => togglePlatform(platform.value)}
                     className={`rounded-full px-3 py-1.5 text-sm transition ease-out ${
                       active
-                        ? 'bg-pencil-soft text-pencil ring-1 ring-pencil/30'
+                        ? 'bg-brass-soft text-brass ring-1 ring-brass/30'
                         : 'sheet text-ink-secondary hover:text-ink'
                     }`}
                   >

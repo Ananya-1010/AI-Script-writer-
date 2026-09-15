@@ -121,7 +121,7 @@ function Scale ({ label, value, onChange }) {
           <span
             className={`h-[9px] w-[9px] rounded-full border transition-all ease-out ${
               value >= n
-                ? 'border-pencil bg-pencil'
+                ? 'border-brass bg-brass'
                 : 'border-rule-strong bg-transparent group-hover:border-content-tertiary group-hover:scale-110'
             }`}
           />

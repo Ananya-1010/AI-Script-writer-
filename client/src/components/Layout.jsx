@@ -69,7 +69,7 @@ function Tab ({ to, children }) {
               layoutId="folio-rule"
               aria-hidden="true"
               transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-              className="absolute -bottom-[21px] left-0 h-[2px] w-full bg-pencil"
+              className="absolute -bottom-[21px] left-0 h-[2px] w-full bg-brass"
             />
           )}
         </>

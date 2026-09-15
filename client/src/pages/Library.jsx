@@ -123,7 +123,7 @@ export default function Library () {
                 <Link to={`/workspace/${script.scriptId}`} className="block py-5 pr-28">
                   <motion.p
                     whileHover={{ x: 5 }} transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    className="display truncate text-xl text-ink transition-colors duration-DEFAULT group-hover:text-pencil"
+                    className="display truncate text-xl text-ink transition-colors duration-DEFAULT group-hover:text-brass"
                   >
                     {script.title}
                   </motion.p>
@@ -137,13 +137,13 @@ export default function Library () {
                 </Link>
 
                 <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-4">
-                  <Status tone={script.status === 'SAVED' ? 'pencil' : 'neutral'}>
+                  <Status tone={script.status === 'SAVED' ? 'brass' : 'neutral'}>
                     {script.status.toLowerCase().replace('_', ' ')}
                   </Status>
                   <button
                     onClick={() => setPendingDelete(script)}
                     aria-label={`Delete ${script.title}`}
-                    className="text-xs text-ink-faint opacity-0 transition hover:text-pencil focus-visible:opacity-100 group-hover:opacity-100"
+                    className="text-xs text-ink-faint opacity-0 transition hover:text-brass focus-visible:opacity-100 group-hover:opacity-100"
                   >
                     Delete
                   </button>

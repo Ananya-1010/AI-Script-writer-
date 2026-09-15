@@ -108,11 +108,11 @@ function Section ({ section, onEdit, onImprove, busy }) {
 
   return (
     <motion.section variants={sectionIn} className="group relative pl-5 sm:pl-7">
-      {/* The margin rule. Red pencil once you have touched it. */}
+      {/* The margin rule. Red brass once you have touched it. */}
       <span
         aria-hidden="true"
         className={`absolute left-0 top-1.5 h-[calc(100%-0.5rem)] w-[3px] transition-colors duration-DEFAULT ${
-          isCreator ? 'bg-pencil' : 'bg-graphite/40 group-focus-within:bg-graphite'
+          isCreator ? 'bg-brass' : 'bg-graphite/40 group-focus-within:bg-graphite'
         }`}
       />
 
@@ -120,7 +120,7 @@ function Section ({ section, onEdit, onImprove, busy }) {
         <span className="label text-ink-tertiary">{kindLabel}</span>
         {heading && <span className="truncate text-xs text-ink-faint">{heading}</span>}
 
-        <span className={`label ${isCreator ? 'text-pencil' : 'text-graphite'}`}>
+        <span className={`label ${isCreator ? 'text-brass' : 'text-graphite'}`}>
           {isCreator ? 'yours' : 'model'}
         </span>
 

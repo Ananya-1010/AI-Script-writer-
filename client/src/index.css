@@ -13,7 +13,7 @@
    AI SCRIPT WRITER — editorial system
 
    The product is a writing instrument, so the reference is print, not software:
-   paper stock, ink, and an editor's red pencil.
+   paper stock, ink, and an editor's red brass.
 
    FOUR DECISIONS EVERYTHING ELSE FOLLOWS FROM
 
@@ -23,12 +23,12 @@
       would print on.
 
    2. ONE INTENTIONAL ACCENT: VERMILION.
-      The editor's red pencil. It appears on the creator's own words, the
+      The editor's red brass. It appears on the creator's own words, the
       primary action, and nothing else. Violet-on-black is the default AI-SaaS
       palette and says nothing about writing.
 
    3. AUTHORSHIP IS SEMANTIC COLOUR.
-      The creator's words carry the red pencil. The model's draft carries
+      The creator's words carry the red brass. The model's draft carries
       graphite. That mapping is the product's core rule expressed as pigment,
       not decoration.
 
@@ -41,47 +41,71 @@
 @layer base {
   :root {
     /*
-      Paper stock — three genuinely distinct values.
-      The previous set sat within two points of each other, so nothing read as
-      a separate object and the whole page looked like one flat beige field.
-      The desk is darker than the sheet, and the sheet is nearly white.
+      Ivory stock. Warmer and creamier than bone, with three genuinely distinct
+      values so surfaces read as separate objects: the desk is darker than the
+      sheet, and the sheet is nearly white.
     */
-    --paper: 38 26% 92%;        /* the desk */
-    --paper-deep: 34 20% 87%;   /* recessed — wells, inset bands */
-    --paper-raised: 44 54% 99%; /* a sheet lying on it */
-
-    /* Ink — richer and darker than before, so text has authority on warm stock */
-    --ink: 20 24% 9%;
-    --ink-secondary: 22 12% 30%;
-    --ink-tertiary: 24 9% 45%;
-    --ink-faint: 26 8% 62%;
-
-    --rule: 30 14% 80%;
-    --rule-strong: 28 12% 66%;
-
-    /* The red pencil. One accent, used sparingly and at full strength. */
-    --pencil: 8 80% 47%;
-    --pencil-deep: 8 84% 39%;
-    --pencil-soft: 10 72% 94%;
+    --paper: 42 44% 94%;        /* the desk */
+    --paper-deep: 40 34% 89%;   /* recessed — wells, inset bands */
+    --paper-raised: 46 60% 99%; /* a sheet lying on it */
 
     /*
-      A second STRUCTURAL colour, not a second accent. Deep pine, used only on
-      large inverted surfaces. A palette with exactly one hue plus black reads
-      as unfinished; this gives the page somewhere to go without turning it
-      into a rainbow.
+      Ink with a green undertone rather than a brown one, so it sits inside the
+      emerald family instead of fighting it. Near-black, never #000.
     */
-    --deep: 174 34% 13%;
-    --deep-soft: 174 24% 92%;
+    --ink: 168 26% 8%;
+    --ink-secondary: 168 10% 28%;
+    --ink-tertiary: 165 8% 44%;
+    --ink-faint: 160 8% 62%;
 
-    /* Graphite — the model's draft */
-    --graphite: 202 16% 36%;
-    --graphite-soft: 202 22% 91%;
+    --rule: 150 12% 82%;
+    --rule-strong: 150 10% 68%;
+
+    /*
+      ANTIQUE BRASS — the accent, and the creator's mark.
+      Gold on deep green is the fine-press pairing: bookbinding, a foil-stamped
+      spine. Brass rather than yellow gold, because saturated yellow on a light
+      ground reads cheap and fails contrast.
+    */
+    --brass: 36 64% 42%;
+    --brass-deep: 34 70% 34%;
+    --brass-soft: 40 62% 92%;
+    --brass-bright: 42 78% 56%;   /* for dark grounds only */
+
+    /*
+      EMERALD — the structural dark. Every inverted surface, the primary
+      button, the masthead on dark. Deep enough to carry cream text at full
+      contrast.
+    */
+    --emerald: 166 46% 12%;
+    --emerald-mid: 166 38% 20%;
+    --emerald-soft: 160 30% 90%;
+
+    /*
+      Text that sits ON an emerald surface. Fixed ivory in BOTH themes.
+      An inverted panel cannot use the theme's text token: in light mode that
+      token is dark and the panel is dark, which works by accident; in dark mode
+      both are dark and the panel goes blank. Ask what the surface is, not what
+      the theme is.
+    */
+    --on-emerald: 44 48% 95%;
+
+    /*
+      The primary action. Deep emerald on ivory stock; brass on night stock,
+      where an emerald button would disappear into an emerald page.
+    */
+    --action: 166 46% 12%;
+    --action-ink: 44 48% 95%;
+
+    /* Slate — the model's draft. Cool, so it reads as *not* the creator's. */
+    --graphite: 200 14% 40%;
+    --graphite-soft: 200 20% 91%;
 
     /* Support */
-    --sage: 140 30% 28%;        /* passing checks */
-    --sage-soft: 140 28% 91%;
-    --ochre: 30 82% 38%;        /* attention */
-    --ochre-soft: 34 74% 91%;
+    --sage: 150 40% 26%;        /* passing checks */
+    --sage-soft: 150 32% 90%;
+    --ochre: 26 78% 42%;        /* attention */
+    --ochre-soft: 30 72% 91%;
 
     --shadow-sm: 0 1px 2px hsl(24 30% 14% / 0.06);
     --shadow-md: 0 1px 2px hsl(24 30% 14% / 0.05), 0 8px 20px -8px hsl(24 30% 14% / 0.12);
@@ -93,33 +117,47 @@
   }
 
   /* Night stock: roasted paper, not blue-black. Same warmth, lights out. */
+  /*
+    Night: deep bottle green, not grey and not black. The whole point of the
+    pairing is that brass has something to glow against — on a neutral charcoal
+    it just looks like orange text.
+  */
   :root[data-theme='dark'] {
-    --paper: 22 14% 8%;
-    --paper-deep: 20 16% 5%;
-    --paper-raised: 24 12% 12%;
+    --paper: 168 38% 7%;
+    --paper-deep: 170 44% 4%;
+    --paper-raised: 166 28% 11%;
 
-    --ink: 40 34% 94%;
-    --ink-secondary: 36 12% 70%;
-    --ink-tertiary: 34 9% 54%;
-    --ink-faint: 32 8% 38%;
+    --ink: 44 44% 94%;          /* warm ivory, so it reads lit rather than lit-grey */
+    --ink-secondary: 44 16% 72%;
+    --ink-tertiary: 42 11% 55%;
+    --ink-faint: 40 9% 40%;
 
-    --rule: 28 10% 20%;
-    --rule-strong: 28 10% 32%;
+    --rule: 166 20% 17%;
+    --rule-strong: 165 16% 30%;
 
-    --pencil: 8 88% 63%;
-    --pencil-deep: 8 90% 70%;
-    --pencil-soft: 8 44% 16%;
+    --brass: 42 82% 60%;
+    --brass-deep: 44 88% 68%;
+    --brass-soft: 38 40% 14%;
+    --brass-bright: 44 92% 66%;
 
-    --deep: 174 32% 82%;
-    --deep-soft: 174 28% 12%;
+    /* Lighter than the page here, so an inverted panel still separates from it. */
+    --emerald: 166 34% 15%;
+    --emerald-mid: 165 30% 22%;
+    --emerald-soft: 166 30% 13%;
 
-    --graphite: 202 20% 62%;
-    --graphite-soft: 205 18% 17%;
+    --on-emerald: 44 48% 95%;
 
-    --sage: 140 38% 60%;
-    --sage-soft: 140 26% 13%;
-    --ochre: 34 86% 62%;
-    --ochre-soft: 32 40% 14%;
+    /* Brass, because an emerald button on an emerald page is invisible. */
+    --action: 42 82% 60%;
+    --action-ink: 168 44% 9%;
+
+    --graphite: 200 18% 62%;
+    --graphite-soft: 200 18% 16%;
+
+    --sage: 150 44% 58%;
+    --sage-soft: 150 30% 12%;
+    --ochre: 30 88% 64%;
+    --ochre-soft: 28 40% 13%;
 
     --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.4);
     --shadow-md: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 20px -8px hsl(0 0% 0% / 0.6);
@@ -172,12 +210,12 @@
   h1, h2, h3 { font-weight: 400; }
 
   :focus-visible {
-    outline: 2px solid hsl(var(--pencil));
+    outline: 2px solid hsl(var(--brass));
     outline-offset: 3px;
     border-radius: 2px;
   }
 
-  ::selection { background: hsl(var(--pencil) / 0.22); }
+  ::selection { background: hsl(var(--brass) / 0.22); }
 
   ::-webkit-scrollbar { width: 12px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -256,12 +294,12 @@
     position: absolute;
     top: -1px; left: 0;
     width: 2.5rem; height: 2px;
-    background: hsl(var(--pencil));
+    background: hsl(var(--brass));
   }
 
-  /* Underline that draws itself on hover — a pencil stroke, not a border. */
+  /* Underline that draws itself on hover — a brass stroke, not a border. */
   .stroke-link {
-    background-image: linear-gradient(hsl(var(--pencil)), hsl(var(--pencil)));
+    background-image: linear-gradient(hsl(var(--brass)), hsl(var(--brass)));
     background-size: 0% 1.5px;
     background-position: 0 100%;
     background-repeat: no-repeat;
@@ -296,7 +334,7 @@
     height: 15px;
     margin-top: -6px;
     border-radius: 99px;
-    background: hsl(var(--pencil));
+    background: hsl(var(--brass));
     border: 3px solid hsl(var(--paper));
     box-shadow: 0 1px 3px hsl(20 30% 10% / 0.3);
     transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -305,7 +343,7 @@
     width: 15px;
     height: 15px;
     border-radius: 99px;
-    background: hsl(var(--pencil));
+    background: hsl(var(--brass));
     border: 3px solid hsl(var(--paper));
     box-shadow: 0 1px 3px hsl(20 30% 10% / 0.3);
   }

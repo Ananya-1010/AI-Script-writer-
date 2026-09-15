@@ -65,7 +65,7 @@ export default function GenerationProgress ({ label = 'Setting your draft', retr
             key={phase.key}
             animate={{ flexGrow: i === index ? 2.6 : 1, opacity: i <= index ? 1 : 0.25 }}
             transition={springSoft}
-            className={`h-[3px] ${i <= index ? 'bg-pencil' : 'bg-ink/20'}`}
+            className={`h-[3px] ${i <= index ? 'bg-brass' : 'bg-ink/20'}`}
             style={{ flexBasis: 0 }}
           />
         ))}

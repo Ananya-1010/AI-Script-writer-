@@ -25,17 +25,26 @@ export default {
           DEFAULT: token('rule'),
           strong: token('rule-strong')
         },
-        /* The one accent: an editor's red pencil. */
-        pencil: {
-          DEFAULT: token('pencil'),
-          deep: token('pencil-deep'),
-          soft: token('pencil-soft')
+        /* Antique brass — the one accent, and the creator's own mark. */
+        brass: {
+          DEFAULT: token('brass'),
+          deep: token('brass-deep'),
+          soft: token('brass-soft'),
+          bright: token('brass-bright')
         },
-        /* A second structural colour for large inverted surfaces — not a
-           second accent. Never used on text at small sizes. */
-        deep: {
-          DEFAULT: token('deep'),
-          soft: token('deep-soft')
+        /* Emerald — the structural dark for inverted surfaces. Not a second
+           accent; never used on small text. */
+        emerald: {
+          DEFAULT: token('emerald'),
+          mid: token('emerald-mid'),
+          soft: token('emerald-soft'),
+          /* Fixed ivory in both themes — for text ON an emerald surface. */
+          ink: token('on-emerald')
+        },
+        /* The primary action. Emerald on ivory stock, brass on night stock. */
+        action: {
+          DEFAULT: token('action'),
+          ink: token('action-ink')
         },
         /* The model's draft */
         graphite: {

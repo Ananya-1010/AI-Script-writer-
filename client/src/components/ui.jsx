@@ -8,24 +8,30 @@ const cx = (...parts) => parts.filter(Boolean).join(' ')
 /* -------------------------------------------------------------- Button -- */
 
 const VARIANTS = {
-  /* The red pencil. One of these per view, and nowhere else. */
+  /*
+    The primary action: emerald ground, ivory type, warming to brass on hover.
+    One per view.
+    The brass rule along the bottom edge is the foil-stamp detail — it is what
+    makes the button read as pressed into the page rather than sitting on it.
+  */
   ink: `
-    bg-ink text-paper
-    hover:bg-pencil
-    disabled:bg-ink-faint disabled:text-paper
+    bg-action text-action-ink
+    shadow-[inset_0_-2px_0_0_hsl(var(--brass))]
+    hover:brightness-[1.15] hover:shadow-[inset_0_-2px_0_0_hsl(var(--on-emerald))]
+    disabled:bg-ink-faint disabled:text-paper disabled:shadow-none disabled:brightness-100
   `,
-  pencil: `
-    bg-pencil text-white
-    hover:bg-pencil-deep
+  brass: `
+    bg-brass text-emerald
+    hover:bg-brass-deep hover:text-paper-raised
     disabled:bg-ink-faint
   `,
   outline: `
     border border-rule-strong text-ink bg-transparent
-    hover:border-ink hover:bg-ink hover:text-paper
+    hover:border-emerald hover:bg-emerald hover:text-emerald-ink
     disabled:border-rule disabled:text-ink-faint disabled:hover:bg-transparent disabled:hover:text-ink-faint
   `,
   quiet: 'text-ink-secondary hover:text-ink disabled:text-ink-faint',
-  danger: 'text-pencil hover:bg-pencil-soft disabled:text-ink-faint'
+  danger: 'text-ochre hover:bg-ochre-soft disabled:text-ink-faint'
 }
 
 const SIZES = {
@@ -54,14 +60,14 @@ export function Button ({ variant = 'outline', size = 'md', className, ...props 
 /**
  * A ruled line, not a box. Boxes make a page look like a form; a baseline rule
  * makes it look like something you write on. The rule thickens and takes the
- * pencil colour on focus.
+ * brass colour on focus.
  */
 export const inputClass = cx(
   'w-full rounded-none border-0 border-b bg-transparent px-0 py-2 text-base text-ink',
   'border-rule-strong placeholder:text-ink-faint',
   'transition-[border-color,box-shadow] duration-DEFAULT ease-out',
   'hover:border-ink-tertiary',
-  'focus:border-pencil focus:outline-none focus:shadow-[0_1px_0_0_hsl(var(--pencil))]'
+  'focus:border-brass focus:outline-none focus:shadow-[0_1px_0_0_hsl(var(--brass))]'
 )
 
 export function Field ({ label, hint, error, children, htmlFor, aside }) {
@@ -73,7 +79,7 @@ export function Field ({ label, hint, error, children, htmlFor, aside }) {
       </div>
       {children}
       {hint && !error && <p className="pt-1.5 text-xs leading-relaxed text-ink-tertiary">{hint}</p>}
-      {error && <p role="alert" className="pt-1.5 text-xs text-pencil">{error}</p>}
+      {error && <p role="alert" className="pt-1.5 text-xs text-brass">{error}</p>}
     </div>
   )
 }
@@ -137,7 +143,7 @@ export function Select ({ value, onChange, options, placeholder = 'Any', label, 
         onKeyDown={onKeyDown}
         className={cx(
           'flex h-9 w-full items-center gap-2 border-b px-0 text-sm transition-colors duration-DEFAULT',
-          open ? 'border-pencil text-ink' : 'border-rule-strong hover:border-ink-tertiary',
+          open ? 'border-brass text-ink' : 'border-rule-strong hover:border-ink-tertiary',
           value ? 'text-ink' : 'text-ink-tertiary'
         )}
       >
@@ -167,10 +173,10 @@ export function Select ({ value, onChange, options, placeholder = 'Any', label, 
                   onClick={() => commit(option)}
                   className={cx(
                     'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors',
-                    i === active ? 'bg-ink text-paper' : 'text-ink-secondary'
+                    i === active ? 'bg-emerald text-emerald-ink' : 'text-ink-secondary'
                   )}
                 >
-                  <span className={cx('h-1 w-1 shrink-0 rounded-full', option.value === value ? 'bg-pencil' : 'bg-transparent')} />
+                  <span className={cx('h-1 w-1 shrink-0 rounded-full', option.value === value ? 'bg-brass' : 'bg-transparent')} />
                   {option.label}
                 </button>
               </li>
@@ -231,7 +237,7 @@ export function Confirm ({ open, title, body, confirmLabel = 'Delete', onConfirm
 export function Eyebrow ({ children, className }) {
   return (
     <p className={cx('label flex items-center gap-2.5 text-ink-tertiary', className)}>
-      <span aria-hidden="true" className="h-px w-6 bg-pencil" />
+      <span aria-hidden="true" className="h-px w-6 bg-brass" />
       {children}
     </p>
   )
@@ -343,7 +349,7 @@ export function ErrorState ({ error, onRetry, className }) {
     <motion.div
       role="alert"
       initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={spring}
-      className={cx('border-l-2 border-pencil bg-pencil-soft py-3 pl-4 pr-3', className)}
+      className={cx('border-l-2 border-brass bg-brass-soft py-3 pl-4 pr-3', className)}
     >
       <p className="text-sm text-ink">{error.message}</p>
       <p className="mt-1 font-mono text-micro tracking-normal text-ink-tertiary">
@@ -360,7 +366,7 @@ export function ErrorState ({ error, onRetry, className }) {
 
 const TONES = {
   neutral: 'text-ink-tertiary',
-  pencil: 'text-pencil',
+  brass: 'text-brass',
   graphite: 'text-graphite',
   sage: 'text-sage',
   ochre: 'text-ochre'
@@ -371,7 +377,7 @@ export function Tag ({ tone = 'neutral', className, children }) {
 }
 
 export function Status ({ children, tone = 'neutral', pulse = false }) {
-  const dot = { neutral: 'bg-ink-faint', pencil: 'bg-pencil', graphite: 'bg-graphite', sage: 'bg-sage' }[tone]
+  const dot = { neutral: 'bg-ink-faint', brass: 'bg-brass', graphite: 'bg-graphite', sage: 'bg-sage' }[tone]
   return (
     <span className="inline-flex items-center gap-2 text-xs text-ink-tertiary">
       <span aria-hidden="true" className="relative grid h-2 w-2 place-items-center">
@@ -412,7 +418,7 @@ export function ThemeToggle () {
 export function Wordmark ({ className }) {
   return (
     <span className={cx('display text-lg tracking-[-0.03em] text-ink', className)}>
-      Script<span className="text-pencil">.</span>
+      Script<span className="text-brass">.</span>
     </span>
   )
 }

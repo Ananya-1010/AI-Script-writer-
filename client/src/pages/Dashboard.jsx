@@ -33,7 +33,7 @@ export default function Dashboard () {
         <Item>
           <Eyebrow>Your desk</Eyebrow>
           <h1 className="display mt-5 text-[clamp(2.4rem,5vw,3.6rem)] text-ink">
-            {hasScripts ? <>Pick up where you <span className="italic">left off</span>.</> : <>Let’s write <span className="italic text-pencil">something</span>.</>}
+            {hasScripts ? <>Pick up where you <span className="italic">left off</span>.</> : <>Let’s write <span className="italic text-brass">something</span>.</>}
           </h1>
         </Item>
         <Item>
@@ -43,13 +43,13 @@ export default function Dashboard () {
 
       {!user?.hasProfile && (
         <Reveal>
-          <Link to="/profile" className="group block border-l-2 border-pencil bg-pencil-soft py-6 pl-6 pr-6">
+          <Link to="/profile" className="group block border-l-2 border-brass bg-brass-soft py-6 pl-6 pr-6">
             <p className="display text-lg text-ink">Set up your creator profile</p>
             <p className="measure mt-2 text-base leading-relaxed text-ink-secondary">
               Two minutes, once. After that every script sounds like you rather
               than like anyone — the single biggest lever on output quality.
             </p>
-            <span className="mt-4 inline-flex items-center gap-2 text-sm text-pencil">
+            <span className="mt-4 inline-flex items-center gap-2 text-sm text-brass">
               Set it up
               <span aria-hidden="true" className="transition-transform duration-DEFAULT group-hover:translate-x-1">→</span>
             </span>
@@ -86,13 +86,13 @@ export default function Dashboard () {
                 {data.recentlyEdited.map((script) => (
                   <motion.div key={script.scriptId} variants={riseIn}>
                     <Link to={`/workspace/${script.scriptId}`} className="group flex items-baseline gap-5 py-4">
-                      <span className="display min-w-0 flex-1 truncate text-lg text-ink transition-colors duration-DEFAULT group-hover:text-pencil">
+                      <span className="display min-w-0 flex-1 truncate text-lg text-ink transition-colors duration-DEFAULT group-hover:text-brass">
                         {script.title}
                       </span>
-                      <Status tone={script.status === 'SAVED' ? 'pencil' : 'neutral'}>
+                      <Status tone={script.status === 'SAVED' ? 'brass' : 'neutral'}>
                         {script.status.toLowerCase().replace('_', ' ')}
                       </Status>
-                      <span aria-hidden="true" className="text-ink-faint transition-transform duration-DEFAULT group-hover:translate-x-1 group-hover:text-pencil">→</span>
+                      <span aria-hidden="true" className="text-ink-faint transition-transform duration-DEFAULT group-hover:translate-x-1 group-hover:text-brass">→</span>
                     </Link>
                   </motion.div>
                 ))}
@@ -145,7 +145,7 @@ function Breakdown ({ label, data }) {
                 initial={{ scaleX: 0 }} animate={{ scaleX: count / total }}
                 transition={{ type: 'spring', stiffness: 120, damping: 24, delay: 0.2 + i * 0.07 }}
                 style={{ transformOrigin: 'left' }}
-                className="block h-full bg-pencil"
+                className="block h-full bg-brass"
               />
             </span>
             <span className="w-6 shrink-0 text-right tabular-nums text-ink-tertiary">{count}</span>
@@ -185,7 +185,7 @@ function Activity ({ rows }) {
             transition={{ type: 'spring', stiffness: 160, damping: 22, delay: 0.25 + i * 0.025 }}
             // Empty days need a visible baseline mark or the chart reads as a
             // single floating bar. At 12% opacity it vanished on dark stock.
-            className={`w-full ${day.generations ? 'bg-pencil' : 'bg-rule-strong'}`}
+            className={`w-full ${day.generations ? 'bg-brass' : 'bg-rule-strong'}`}
           />
           <span className="pointer-events-none absolute -top-7 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap bg-ink px-2 py-1 text-micro tracking-normal text-paper opacity-0 transition-opacity group-hover:opacity-100">
             {day.generations} on {day.label}

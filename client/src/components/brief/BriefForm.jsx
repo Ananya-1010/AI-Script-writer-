@@ -90,7 +90,7 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
                 onClick={() => setForm({ ...form, contentType: option.value })}
                 className="group flex w-full items-baseline gap-4 py-3.5 text-left"
               >
-                <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${active ? 'bg-pencil' : 'bg-ink-faint/50 group-hover:bg-ink-tertiary'}`} />
+                <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${active ? 'bg-brass' : 'bg-ink-faint/50 group-hover:bg-ink-tertiary'}`} />
                 <span className={`display text-lg transition-colors ${active ? 'text-ink' : 'text-ink-tertiary group-hover:text-ink-secondary'}`}>
                   {option.label}
                 </span>
@@ -106,7 +106,7 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
           <input
             id="duration" type="range" aria-label="Approximate length"
             min={platform.min} max={platform.max} step={platform.max > 600 ? 30 : 5}
-            className="h-[3px] flex-1 cursor-pointer appearance-none bg-ink/12 accent-pencil"
+            className="h-[3px] flex-1 cursor-pointer appearance-none bg-ink/12 accent-brass"
             value={form.durationSeconds}
             onChange={(e) => setForm({ ...form, durationSeconds: Number(e.target.value) })}
           />
@@ -154,7 +154,7 @@ function Group ({ label, hint, children }) {
   )
 }
 
-/** A word you press, underlined in pencil when chosen. No pills, no chips. */
+/** A word you press, underlined in brass when chosen. No pills, no chips. */
 function Word ({ active, onClick, children }) {
   return (
     <button
@@ -166,7 +166,7 @@ function Word ({ active, onClick, children }) {
       {children}
       <span
         aria-hidden="true"
-        className={`absolute bottom-0 left-0 h-[2px] bg-pencil transition-all duration-DEFAULT ease-out ${active ? 'w-full' : 'w-0'}`}
+        className={`absolute bottom-0 left-0 h-[2px] bg-brass transition-all duration-DEFAULT ease-out ${active ? 'w-full' : 'w-0'}`}
       />
     </button>
   )

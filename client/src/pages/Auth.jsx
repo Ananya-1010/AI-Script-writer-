@@ -29,7 +29,7 @@ function AuthShell ({ title, standfirst, children, footer }) {
 
           <motion.p variants={rise} className="display display-tight mt-7 text-[clamp(2.4rem,4.4vw,3.6rem)] text-ink">
             A blank page is not a writing problem. It is a
-            <span className="italic text-pencil"> structure </span>
+            <span className="italic text-brass"> structure </span>
             problem.
           </motion.p>
 
