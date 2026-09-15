@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useInView, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { resolveTheme, toggleTheme } from '../state/theme.js'
 import { spring, springSnap, riseIn, stagger, ease } from '../lib/motion.js'
 
@@ -75,6 +75,153 @@ export function Field ({ label, hint, error, children, htmlFor, aside }) {
       {hint && !error && <p className="pt-1.5 text-xs leading-relaxed text-ink-tertiary">{hint}</p>}
       {error && <p role="alert" className="pt-1.5 text-xs text-pencil">{error}</p>}
     </div>
+  )
+}
+
+/* -------------------------------------------------------------- Select -- */
+
+/**
+ * A listbox, because a native <select> cannot be styled.
+ *
+ * Browsers render the closed control and the open menu with OS chrome — a grey
+ * capsule, a system arrow, a white popup — none of which belong to this
+ * palette. On a page made of paper and hairlines a native select is the single
+ * most obvious "unstyled HTML" tell.
+ *
+ * Keyboard: Enter/Space opens, Escape closes and returns focus, arrows move
+ * through options, Home/End jump. Click-outside closes.
+ */
+export function Select ({ value, onChange, options, placeholder = 'Any', label, className }) {
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
+  const root = useRef(null)
+
+  const items = [{ value: '', label: placeholder }, ...options]
+  const selected = items.find((o) => o.value === value) ?? items[0]
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => { if (!root.current?.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
+
+  useEffect(() => {
+    if (open) setActive(Math.max(0, items.findIndex((o) => o.value === value)))
+  }, [open])
+
+  const commit = (option) => { onChange(option.value); setOpen(false) }
+
+  const onKeyDown = (event) => {
+    if (!open && (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown')) {
+      event.preventDefault(); setOpen(true); return
+    }
+    if (!open) return
+
+    if (event.key === 'Escape') { event.preventDefault(); setOpen(false) }
+    else if (event.key === 'ArrowDown') { event.preventDefault(); setActive((i) => Math.min(i + 1, items.length - 1)) }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); setActive((i) => Math.max(i - 1, 0)) }
+    else if (event.key === 'Home') { event.preventDefault(); setActive(0) }
+    else if (event.key === 'End') { event.preventDefault(); setActive(items.length - 1) }
+    else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); commit(items[active]) }
+  }
+
+  return (
+    <div ref={root} className={cx('relative', className)}>
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={label}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={onKeyDown}
+        className={cx(
+          'flex h-9 w-full items-center gap-2 border-b px-0 text-sm transition-colors duration-DEFAULT',
+          open ? 'border-pencil text-ink' : 'border-rule-strong hover:border-ink-tertiary',
+          value ? 'text-ink' : 'text-ink-tertiary'
+        )}
+      >
+        <span className="truncate">{selected.label}</span>
+        <motion.svg
+          animate={{ rotate: open ? 180 : 0 }} transition={spring}
+          viewBox="0 0 10 6" className="ml-auto h-1.5 w-2.5 shrink-0" fill="none"
+          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"
+        >
+          <path d="M1 1l4 4 4-4" />
+        </motion.svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            role="listbox" aria-label={label}
+            initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto border border-rule bg-paper-raised py-1 shadow-lg"
+          >
+            {items.map((option, i) => (
+              <li key={option.value || '_'} role="option" aria-selected={option.value === value}>
+                <button
+                  type="button"
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => commit(option)}
+                  className={cx(
+                    'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors',
+                    i === active ? 'bg-ink text-paper' : 'text-ink-secondary'
+                  )}
+                >
+                  <span className={cx('h-1 w-1 shrink-0 rounded-full', option.value === value ? 'bg-pencil' : 'bg-transparent')} />
+                  {option.label}
+                </button>
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------- Confirm -- */
+
+/**
+ * window.confirm draws an OS dialog with the page's origin in it. It is the
+ * loudest possible break in a designed interface, and it cannot be styled.
+ */
+export function Confirm ({ open, title, body, confirmLabel = 'Delete', onConfirm, onCancel }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') onCancel() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onCancel])
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] grid place-items-center bg-ink/40 p-6"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel() }}
+        >
+          <motion.div
+            role="alertdialog" aria-modal="true" aria-label={title}
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={spring}
+            className="w-full max-w-sm border border-rule bg-paper-raised p-7 shadow-lg"
+          >
+            <p className="display text-xl text-ink">{title}</p>
+            {body && <p className="mt-2 text-sm leading-relaxed text-ink-tertiary">{body}</p>}
+            <div className="mt-7 flex gap-3">
+              <Button variant="ink" onClick={onConfirm}>{confirmLabel}</Button>
+              <Button variant="quiet" onClick={onCancel}>Cancel</Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 

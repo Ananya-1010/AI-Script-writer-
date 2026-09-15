@@ -40,34 +40,48 @@
 
 @layer base {
   :root {
-    /* Paper stock */
-    --paper: 42 38% 96%;        /* bone */
-    --paper-deep: 40 30% 92%;   /* sand, for recessed areas */
-    --paper-raised: 44 50% 98%; /* a sheet lifted off the desk */
+    /*
+      Paper stock — three genuinely distinct values.
+      The previous set sat within two points of each other, so nothing read as
+      a separate object and the whole page looked like one flat beige field.
+      The desk is darker than the sheet, and the sheet is nearly white.
+    */
+    --paper: 38 26% 92%;        /* the desk */
+    --paper-deep: 34 20% 87%;   /* recessed — wells, inset bands */
+    --paper-raised: 44 54% 99%; /* a sheet lying on it */
 
-    /* Ink */
-    --ink: 24 16% 12%;          /* warm charcoal, never #000 */
-    --ink-secondary: 26 10% 34%;
-    --ink-tertiary: 28 8% 48%;
-    --ink-faint: 30 8% 64%;
+    /* Ink — richer and darker than before, so text has authority on warm stock */
+    --ink: 20 24% 9%;
+    --ink-secondary: 22 12% 30%;
+    --ink-tertiary: 24 9% 45%;
+    --ink-faint: 26 8% 62%;
 
-    --rule: 32 16% 84%;         /* hairline */
-    --rule-strong: 30 14% 72%;
+    --rule: 30 14% 80%;
+    --rule-strong: 28 12% 66%;
 
-    /* The red pencil. One accent, used sparingly. */
-    --pencil: 10 74% 47%;
-    --pencil-deep: 10 78% 40%;
-    --pencil-soft: 12 70% 95%;
+    /* The red pencil. One accent, used sparingly and at full strength. */
+    --pencil: 8 80% 47%;
+    --pencil-deep: 8 84% 39%;
+    --pencil-soft: 10 72% 94%;
+
+    /*
+      A second STRUCTURAL colour, not a second accent. Deep pine, used only on
+      large inverted surfaces. A palette with exactly one hue plus black reads
+      as unfinished; this gives the page somewhere to go without turning it
+      into a rainbow.
+    */
+    --deep: 174 34% 13%;
+    --deep-soft: 174 24% 92%;
 
     /* Graphite — the model's draft */
-    --graphite: 200 14% 38%;
-    --graphite-soft: 200 20% 93%;
+    --graphite: 202 16% 36%;
+    --graphite-soft: 202 22% 91%;
 
     /* Support */
-    --sage: 118 18% 36%;        /* passing checks */
-    --sage-soft: 118 26% 93%;
-    --ochre: 34 76% 40%;        /* attention */
-    --ochre-soft: 36 72% 93%;
+    --sage: 140 30% 28%;        /* passing checks */
+    --sage-soft: 140 28% 91%;
+    --ochre: 30 82% 38%;        /* attention */
+    --ochre-soft: 34 74% 91%;
 
     --shadow-sm: 0 1px 2px hsl(24 30% 14% / 0.06);
     --shadow-md: 0 1px 2px hsl(24 30% 14% / 0.05), 0 8px 20px -8px hsl(24 30% 14% / 0.12);
@@ -80,29 +94,32 @@
 
   /* Night stock: roasted paper, not blue-black. Same warmth, lights out. */
   :root[data-theme='dark'] {
-    --paper: 26 14% 9%;
-    --paper-deep: 24 16% 6%;
-    --paper-raised: 26 12% 13%;
+    --paper: 22 14% 8%;
+    --paper-deep: 20 16% 5%;
+    --paper-raised: 24 12% 12%;
 
-    --ink: 40 32% 93%;
+    --ink: 40 34% 94%;
     --ink-secondary: 36 12% 70%;
-    --ink-tertiary: 34 9% 55%;
-    --ink-faint: 32 8% 40%;
+    --ink-tertiary: 34 9% 54%;
+    --ink-faint: 32 8% 38%;
 
-    --rule: 28 12% 22%;
-    --rule-strong: 28 12% 34%;
+    --rule: 28 10% 20%;
+    --rule-strong: 28 10% 32%;
 
-    --pencil: 10 82% 62%;
-    --pencil-deep: 10 84% 68%;
-    --pencil-soft: 10 40% 18%;
+    --pencil: 8 88% 63%;
+    --pencil-deep: 8 90% 70%;
+    --pencil-soft: 8 44% 16%;
 
-    --graphite: 200 18% 62%;
-    --graphite-soft: 205 20% 18%;
+    --deep: 174 32% 82%;
+    --deep-soft: 174 28% 12%;
 
-    --sage: 118 30% 58%;
-    --sage-soft: 118 24% 15%;
-    --ochre: 38 84% 62%;
-    --ochre-soft: 36 40% 16%;
+    --graphite: 202 20% 62%;
+    --graphite-soft: 205 18% 17%;
+
+    --sage: 140 38% 60%;
+    --sage-soft: 140 26% 13%;
+    --ochre: 34 86% 62%;
+    --ochre-soft: 32 40% 14%;
 
     --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.4);
     --shadow-md: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 20px -8px hsl(0 0% 0% / 0.6);
@@ -251,6 +268,50 @@
     transition: background-size 420ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .stroke-link:hover { background-size: 100% 1.5px; }
+
+  /* ------------------------------------------------------------- range --
+     Native range inputs render as an OS widget — a grey capsule and a blue
+     thumb that belongs to nothing in this palette. Styling both vendor
+     pseudo-elements is the only way to make the control part of the page. */
+  input[type='range'] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 3px;
+    background: hsl(var(--rule-strong));
+  }
+  input[type='range']::-moz-range-track {
+    height: 3px;
+    background: hsl(var(--rule-strong));
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    margin-top: -6px;
+    border-radius: 99px;
+    background: hsl(var(--pencil));
+    border: 3px solid hsl(var(--paper));
+    box-shadow: 0 1px 3px hsl(20 30% 10% / 0.3);
+    transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  input[type='range']::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 99px;
+    background: hsl(var(--pencil));
+    border: 3px solid hsl(var(--paper));
+    box-shadow: 0 1px 3px hsl(20 30% 10% / 0.3);
+  }
+
+  input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.18); }
+  input[type='range']:active::-webkit-slider-thumb { transform: scale(0.94); }
 }
 
 @layer utilities {

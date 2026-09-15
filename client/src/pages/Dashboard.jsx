@@ -183,7 +183,9 @@ function Activity ({ rows }) {
             initial={{ height: 0 }}
             animate={{ height: day.generations ? `${(day.generations / max) * 100}%` : '2px' }}
             transition={{ type: 'spring', stiffness: 160, damping: 22, delay: 0.25 + i * 0.025 }}
-            className={`w-full ${day.generations ? 'bg-pencil' : 'bg-ink/12'}`}
+            // Empty days need a visible baseline mark or the chart reads as a
+            // single floating bar. At 12% opacity it vanished on dark stock.
+            className={`w-full ${day.generations ? 'bg-pencil' : 'bg-rule-strong'}`}
           />
           <span className="pointer-events-none absolute -top-7 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap bg-ink px-2 py-1 text-micro tracking-normal text-paper opacity-0 transition-opacity group-hover:opacity-100">
             {day.generations} on {day.label}

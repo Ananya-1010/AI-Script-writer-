@@ -31,6 +31,12 @@ export default {
           deep: token('pencil-deep'),
           soft: token('pencil-soft')
         },
+        /* A second structural colour for large inverted surfaces — not a
+           second accent. Never used on text at small sizes. */
+        deep: {
+          DEFAULT: token('deep'),
+          soft: token('deep-soft')
+        },
         /* The model's draft */
         graphite: {
           DEFAULT: token('graphite'),
