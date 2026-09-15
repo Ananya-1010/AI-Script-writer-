@@ -10,8 +10,10 @@ cost accounting does not care which provider produced the text (spec 12.6).
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+import random
 import time
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -47,17 +49,36 @@ class LLMProvider(Protocol):
     ) -> Completion: ...
 
 
-# USD per 1M tokens. Used to record cost even when the call is on a free tier,
-# because "what would this have cost" is the number that tells us whether the
-# design is affordable before it is ever billed.
+# USD per 1M tokens, (input, output). Cost is recorded even on a free tier,
+# because "what would this have cost" is what tells us the design is affordable
+# before an invoice does.
+#
+# ⚠️ Introductory rates. Google has said Standard pricing roughly doubles on
+# 2027-01-01 (3.6-flash to 1.50 / 7.50). Revisit this table then rather than
+# discovering it from a bill.
 PRICING: dict[str, tuple[float, float]] = {
+    "gemini-3.6-flash": (0.75, 3.75),
+    "gemini-3.5-flash": (0.75, 3.75),
     "gemini-2.5-flash": (0.30, 2.50),
     "gemini-2.5-flash-lite": (0.10, 0.40),
 }
 
+_unpriced_warned: set[str] = set()
+
 
 def price(model: str, prompt_tokens: int, completion_tokens: int) -> float:
-    inp, out = PRICING.get(model, (0.0, 0.0))
+    rates = PRICING.get(model)
+
+    if rates is None:
+        # Returning a silent 0.0 for an unknown model is how a cost dashboard
+        # reads healthy while spend climbs. Token counts stay accurate either
+        # way; only the money is unknown, and that is worth saying out loud.
+        if model not in _unpriced_warned:
+            _unpriced_warned.add(model)
+            log.warning("model_not_in_pricing_table", extra={"model": model})
+        return 0.0
+
+    inp, out = rates
     return round((prompt_tokens * inp + completion_tokens * out) / 1_000_000, 6)
 
 
@@ -120,12 +141,82 @@ class GeminiLLM:
     name = "gemini"
     BASE = "https://generativelanguage.googleapis.com/v1beta"
 
+    # A free tier is a shared tier: 429 (our rate) and 503 (their load) are
+    # ordinary weather, not exceptional failures. Retrying a couple of times
+    # with backoff is the difference between a product that works and one that
+    # asks the creator to press the button again.
+    TRANSIENT_STATUSES = {429, 500, 502, 503, 504, 529}
+    MAX_ATTEMPTS = 3
+    BACKOFF_BASE_S = 1.5
+
     def __init__(self, api_key: str, model: str, timeout_s: float) -> None:
         if not api_key:
             raise ServiceError("INTERNAL_ERROR", "LLM provider is not configured.")
         self._api_key = api_key
         self._model = model
         self._timeout = timeout_s
+
+    async def _post_with_retry(self, url: str, body: dict) -> httpx.Response:
+        """Bounded retry with jittered exponential backoff on transient failures.
+
+        Jitter matters: without it, several generations that fail together
+        retry together, and the retries collide exactly as the originals did.
+
+        A timeout is *not* retried. The request may well have been served and
+        billed; re-sending doubles the cost to answer a question the creator can
+        answer faster by pressing retry themselves.
+        """
+        last_status: int | None = None
+
+        for attempt in range(1, self.MAX_ATTEMPTS + 1):
+            try:
+                async with httpx.AsyncClient(timeout=self._timeout) as client:
+                    response = await client.post(
+                        url, json=body, headers={"x-goog-api-key": self._api_key}
+                    )
+            except httpx.TimeoutException as exc:
+                raise ServiceError(
+                    "LLM_TIMEOUT", "The script took too long to generate. Please try again."
+                ) from exc
+            except httpx.HTTPError as exc:
+                raise ServiceError(
+                    "GENERATION_FAILED", "The script could not be generated. Please try again."
+                ) from exc
+
+            if response.status_code < 400:
+                if attempt > 1:
+                    log.info("llm_retry_succeeded", extra={"attempt": attempt})
+                return response
+
+            last_status = response.status_code
+
+            if response.status_code not in self.TRANSIENT_STATUSES:
+                # Provider payloads never reach the caller: they can echo prompt
+                # text. The status is enough to act on.
+                log.warning("llm_http_error", extra={"status": response.status_code})
+                raise ServiceError(
+                    "GENERATION_FAILED", "The script could not be generated. Please try again."
+                )
+
+            if attempt < self.MAX_ATTEMPTS:
+                delay = self.BACKOFF_BASE_S * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
+                log.info(
+                    "llm_transient_error_retrying",
+                    extra={"status": response.status_code, "attempt": attempt, "delayMs": int(delay * 1000)},
+                )
+                await asyncio.sleep(delay)
+
+        log.warning("llm_transient_exhausted", extra={"status": last_status, "attempts": self.MAX_ATTEMPTS})
+
+        if last_status == 429:
+            raise ServiceError(
+                "LLM_RATE_LIMITED",
+                "You have hit the model's rate limit. Please wait a moment and try again.",
+            )
+        raise ServiceError(
+            "LLM_RATE_LIMITED",
+            "The model is busy right now. Please try again in a moment.",
+        )
 
     async def complete(
         self,
@@ -151,34 +242,8 @@ class GeminiLLM:
         started = time.perf_counter()
         url = f"{self.BASE}/models/{self._model}:generateContent"
 
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.post(
-                    url, json=body, headers={"x-goog-api-key": self._api_key}
-                )
-        except httpx.TimeoutException as exc:
-            raise ServiceError(
-                "LLM_TIMEOUT", "The script took too long to generate. Please try again."
-            ) from exc
-        except httpx.HTTPError as exc:
-            raise ServiceError(
-                "GENERATION_FAILED", "The script could not be generated. Please try again."
-            ) from exc
-
+        response = await self._post_with_retry(url, body)
         latency_ms = int((time.perf_counter() - started) * 1000)
-
-        if response.status_code == 429:
-            # The free tier is 10 RPM / 500 RPD. Hitting it is expected, not
-            # exceptional, so it is a typed retryable error rather than a crash.
-            raise ServiceError(
-                "LLM_RATE_LIMITED", "The model is busy right now. Please try again shortly."
-            )
-        if response.status_code >= 400:
-            # Provider payloads never reach the caller: they can echo prompt text.
-            log.warning("llm_http_error", extra={"status": response.status_code})
-            raise ServiceError(
-                "GENERATION_FAILED", "The script could not be generated. Please try again."
-            )
 
         data = response.json()
 

@@ -9,6 +9,7 @@ and belongs in a reviewable diff.
 
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # One .env at the repo root, shared with the Node service.
@@ -39,6 +40,12 @@ class Settings(BaseSettings):
     embedding_model: str = ""
     embedding_dimensions: int = 1536
 
+    # Retrieval is switched off until the curated knowledge base exists and the
+    # threshold is calibrated (W3). Generation is built to treat an empty
+    # context set as normal, so this changes nothing structurally — it is the
+    # same code path that runs when nothing clears the threshold.
+    retrieval_enabled: bool = False
+
     retrieval_top_k: int = 6
     # On the normalised [0, 1] scale defined in rag/vector_store.py, where 0.5
     # means "unrelated" and 1.0 means "identical". NOT raw cosine — a value that
@@ -59,6 +66,17 @@ class Settings(BaseSettings):
 
     vector_store: str = "memory"
     vector_index_name: str = "knowledge_vector_index"
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def strip_whitespace(cls, value):
+        """`.env` is hand-edited, and `KEY= value` is an easy slip to make.
+
+        Without this, a single leading space turns "gemini" into " gemini", the
+        provider lookup misses, and the service fails at boot with "provider is
+        not configured" — pointing at the code rather than at the space.
+        """
+        return value.strip() if isinstance(value, str) else value
 
     @property
     def uses_live_provider(self) -> bool:

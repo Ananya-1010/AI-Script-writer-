@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from .config import settings
 from .errors import ServiceError
 from .observability.logging import configure_logging
-from .routers import health
+from .routers import health, internal
 
 configure_logging()
 log = logging.getLogger("ai-service")
@@ -29,6 +29,7 @@ app = FastAPI(
 )
 
 app.include_router(health.router)
+app.include_router(internal.router)
 
 
 @app.exception_handler(ServiceError)

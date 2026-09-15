@@ -66,6 +66,39 @@ class StructuredScript(BaseModel):
         return sections
 
 
+# Hand-written rather than derived from the Pydantic model. Gemini's
+# responseSchema accepts a restricted OpenAPI subset: no $ref, no $defs, no
+# anyOf. model_json_schema() emits all three for nested models, and the request
+# is rejected. Keeping it explicit also keeps the field order stable, which the
+# model follows when composing its output.
+#
+# This is a *request* schema, a hint. StructuredScript is still the authority —
+# validator.py re-validates everything that comes back.
+RESPONSE_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "sections": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "kind": {"type": "string", "enum": [k.value for k in SectionKind]},
+                    "heading": {"type": "string"},
+                    "body": {"type": "string"},
+                    "order": {"type": "integer"},
+                },
+                "required": ["kind", "heading", "body", "order"],
+            },
+        },
+        "estimatedDurationSeconds": {"type": "integer"},
+        "platform": {"type": "string", "enum": [p.value for p in Platform]},
+        "contentType": {"type": "string", "enum": [c.value for c in ContentType]},
+    },
+    "required": ["title", "sections", "estimatedDurationSeconds", "platform", "contentType"],
+}
+
+
 # Which kinds are *required* varies by content type; the permitted set does not.
 # This is what the automated structural checks assert against (spec 10.3).
 REQUIRED_SECTIONS: dict[ContentType, dict] = {

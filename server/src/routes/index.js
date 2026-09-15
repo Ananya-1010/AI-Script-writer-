@@ -2,14 +2,17 @@ import { Router } from 'express'
 import { healthRouter } from './health.js'
 import { authRouter } from './auth.js'
 import { profileRouter } from './profile.js'
+import { scriptRouter } from './scripts.js'
+import { dashboardRouter } from './dashboard.js'
 
 /**
- * Public application API. Base path /api/v1 (spec 6).
- * Routes land here as each week's slice is built:
- *   W2 auth + profile ✓ · W3 knowledge · W4-5 generation · W6 scripts · W8 dashboard · W9 evaluation
+ * Public application API, mounted at /api/v1 (spec 6).
+ * Knowledge ingestion is the one route group still to come, in W3.
  */
 export const apiRouter = Router()
 
 apiRouter.use(healthRouter)
 apiRouter.use(authRouter)
 apiRouter.use(profileRouter)
+apiRouter.use(scriptRouter)
+apiRouter.use(dashboardRouter)
