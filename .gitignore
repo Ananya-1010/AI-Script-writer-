@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# secrets — never commit. .env.example is the only env file that ships.
+.env
+.env.*
+!.env.example
+
+# builds
+dist/
+build/
+client/dist/
+*.tsbuildinfo
+
+# logs / local data
+*.log
+npm-debug.log*
+.data/
+mongo-data/
+
+# editors / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# local artifacts
+coverage/
+.cache/

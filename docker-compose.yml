@@ -1,0 +1,45 @@
+# Local development: client, application service, AI service, MongoDB.
+# The provider is stubbed by default (LLM_PROVIDER=stub), so a day of
+# development costs nothing (spec 13.1).
+
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai-service:
+    build:
+      context: ./ai-service
+    env_file: .env
+    environment:
+      # Reachable only on the compose network. No host port is published:
+      # the AI service must not be reachable from the browser (spec 4.1).
+      AI_SERVICE_HOST: 0.0.0.0
+    expose:
+      - "8000"
+
+  server:
+    build:
+      context: ./server
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/ai_script_writer
+      AI_SERVICE_URL: http://ai-service:8000
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+
+volumes:
+  mongo-data:
