@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { EVALUATION_CRITERIA, scripts as scriptsApi } from '../../api/endpoints.js'
-import { Button, Card, ErrorState, inputClass } from '../ui.jsx'
+import { Button, ErrorState, inputClass } from '../ui.jsx'
 
 /**
- * Six criteria, each scored 1 to 5, with its definition visible at the point of
- * scoring (spec 8.3). Attached to a specific generation, not to the script in
- * general — a script accumulates several generations and scoring "the script"
- * makes the dataset uninterpretable.
+ * Six criteria, each with its definition visible at the point of scoring
+ * (spec 8.3), attached to one generation rather than to the script.
+ *
+ * It lives in the rail at rail scale, because rating is a deliberate act that
+ * happens after reading — not something that should compete with the script
+ * while the creator is still reading it.
  */
 export default function EvaluationPanel ({ scriptId, generationId, onSaved }) {
   const [scores, setScores] = useState({})
@@ -16,59 +18,69 @@ export default function EvaluationPanel ({ scriptId, generationId, onSaved }) {
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const complete = EVALUATION_CRITERIA.every((c) => scores[c.key]) && humanRating > 0
+  // Seven, not six: the overall rating is required too, and a counter that
+  // reads 6/6 next to a disabled button is just confusing.
+  const total = EVALUATION_CRITERIA.length + 1
+  const done = EVALUATION_CRITERIA.filter((c) => scores[c.key]).length + (humanRating ? 1 : 0)
+  const complete = done === total
 
   const submit = async (event) => {
     event.preventDefault()
-    setBusy(true)
-    setError(null)
+    setBusy(true); setError(null)
     try {
       await scriptsApi.saveEvaluation(scriptId, { generationId, scores, humanRating, feedback })
       setSaved(true)
       onSaved?.()
     } catch (err) {
-      // A save failure keeps the entered scores on screen; nothing is discarded.
+      // A failed save keeps every score on screen. Nothing is discarded.
       setError(err)
-    } finally {
-      setBusy(false)
-    }
+    } finally { setBusy(false) }
   }
 
   if (saved) {
     return (
-      <Card title="Evaluation">
-        <p className="text-sm text-slate-600">Scored. This feeds prompt and retrieval changes, nothing else.</p>
-      </Card>
+      <section>
+        <h2 className="mb-2 text-micro font-medium uppercase tracking-[0.08em] text-content-tertiary">Rated</h2>
+        <p className="text-xs leading-relaxed text-content-tertiary">
+          Scored. This feeds prompt and retrieval changes — nothing else.
+        </p>
+      </section>
     )
   }
 
   return (
-    <Card title="Rate this generation">
-      <form onSubmit={submit} className="space-y-4">
+    <section>
+      <div className="mb-2.5 flex items-baseline justify-between">
+        <h2 className="text-micro font-medium uppercase tracking-[0.08em] text-content-tertiary">
+          Rate this draft
+        </h2>
+        <span className="text-micro tabular-nums text-content-faint">{done}/{total}</span>
+      </div>
+
+      <form onSubmit={submit} className="space-y-3">
         {EVALUATION_CRITERIA.map((criterion) => (
           <div key={criterion.key}>
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm font-medium text-slate-800">{criterion.label}</p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-content-secondary" title={criterion.hint}>
+                {criterion.label}
+              </span>
               <Scale
-                name={criterion.key}
+                label={criterion.label}
                 value={scores[criterion.key]}
                 onChange={(value) => setScores((s) => ({ ...s, [criterion.key]: value }))}
               />
             </div>
-            <p className="text-xs text-slate-500">{criterion.hint}</p>
           </div>
         ))}
 
-        <div className="border-t border-slate-100 pt-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-sm font-semibold text-slate-900">Overall</p>
-            <Scale name="humanRating" value={humanRating} onChange={setHumanRating} />
-          </div>
+        <div className="flex items-center justify-between gap-2 border-t border-line pt-3">
+          <span className="text-xs font-medium text-content">Overall</span>
+          <Scale label="Overall" value={humanRating} onChange={setHumanRating} />
         </div>
 
         <textarea
           rows={2}
-          className={inputClass}
+          className={`${inputClass} text-xs`}
           placeholder="What worked, what did not"
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
@@ -77,20 +89,22 @@ export default function EvaluationPanel ({ scriptId, generationId, onSaved }) {
 
         <ErrorState error={error} />
 
-        <div className="flex items-center gap-3">
-          <Button type="submit" disabled={!complete || busy}>Save evaluation</Button>
-          {/* All six are required, so the dataset stays comparable across
-              generations — say why rather than just disabling the button. */}
-          {!complete && <p className="text-xs text-slate-500">All six criteria plus an overall rating.</p>}
-        </div>
+        <Button type="submit" size="sm" variant={complete ? 'primary' : 'secondary'} disabled={!complete || busy} className="w-full">
+          {busy ? 'Saving…' : complete ? 'Save rating' : 'Score all seven to save'}
+        </Button>
       </form>
-    </Card>
+    </section>
   )
 }
 
-function Scale ({ name, value, onChange }) {
+/**
+ * Five dots, not five numbered buttons. At rail scale the number is unreadable
+ * anyway; position carries the value, and the accessible name carries it for
+ * anyone who cannot see position.
+ */
+function Scale ({ label, value, onChange }) {
   return (
-    <div className="flex gap-1" role="radiogroup" aria-label={name}>
+    <div className="flex gap-0.5" role="radiogroup" aria-label={label}>
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
@@ -99,13 +113,18 @@ function Scale ({ name, value, onChange }) {
           aria-checked={value === n}
           aria-label={`${n} out of 5`}
           onClick={() => onChange(n)}
-          className={`h-7 w-7 rounded border text-xs transition ${
-            value === n
-              ? 'border-app bg-app text-white'
-              : 'border-slate-300 text-slate-600 hover:border-slate-400'
-          }`}
+          className="group grid h-5 w-4 place-items-center"
         >
-          {n}
+          {/* Unfilled is an outlined slot, not a faint fill. A dim filled dot
+              disappears against either theme, and the whole control reads as
+              missing — an outline says "empty, and pressable" at any contrast. */}
+          <span
+            className={`h-[9px] w-[9px] rounded-full border transition-all ease-out ${
+              value >= n
+                ? 'border-accent bg-accent'
+                : 'border-line-strong bg-transparent group-hover:border-content-tertiary group-hover:scale-110'
+            }`}
+          />
         </button>
       ))}
     </div>
