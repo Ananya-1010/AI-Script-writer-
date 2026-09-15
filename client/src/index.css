@@ -1,6 +1,3 @@
-/* Self-hosted variable fonts. No CDN: the app must render identically offline
-   and on a slow connection, and a flash of fallback text in a writing tool is
-   the first thing you notice. */
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/newsreader';
 
@@ -9,107 +6,131 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   Design tokens
-   --------------------------------------------------------------------------
-   Three rules this system holds to, and the reason for each:
+   AI Script Writer — material and motion system
 
-   1. HIERARCHY COMES FROM SIZE, COLOUR AND SPACE — NOT WEIGHT.
-      Only two UI weights exist, 400 and 500. When everything important is
-      bold, nothing is, and a page of competing bold text reads as flat.
+   Built against Apple's Liquid Glass language rather than flat productivity
+   UI. Three things carry it:
 
-   2. ONE CHROMATIC ACCENT.
-      --accent carries the brand, focus rings, and one primary action per view.
-      AI/creator authorship is the single exception, because the spec requires
-      that distinction to be visible at a glance — and even there it is a
-      hairline rule plus a label, not a filled swatch.
+   1. MATERIAL. Surfaces are layered glass, not painted rectangles. Every
+      raised surface has a translucent fill, a 1px specular highlight along its
+      top edge, an inner shadow at the bottom, and an outer shadow beneath.
+      That four-part stack is what makes a panel read as a physical object.
 
-   3. THE SCRIPT IS THE PAGE.
-      Script text is serif, 18px, 1.72 leading, capped at a 68-character
-      measure. Every other surface is quieter than it, on purpose.
+   2. LIGHT. There is a living gradient field behind everything. Glass needs
+      something to refract, and a flat background makes translucency invisible.
+
+   3. MOTION. Springs, not linear fades. Physical easing is the difference
+      between "the page changed" and "the object moved".
+
+   The script surface stays typographically quiet under all of it — the draft is
+   still the page (spec 8.5). Drama belongs to the chrome, never to the words.
    ========================================================================== */
 
 @layer base {
   :root {
-    /* Surface ladder. Four steps, each a hair lighter, so depth comes from
-       elevation rather than from drawing more boxes. */
-    --bg: 0 0% 99%;
+    /* Base field */
+    --bg: 240 20% 98%;
+    --bg-deep: 245 30% 96%;
+
+    /* Glass is expressed as fill + border + highlight, not a solid colour. */
+    --glass-fill: 0 0% 100% / 0.72;
+    --glass-fill-strong: 0 0% 100% / 0.86;
+    --glass-border: 240 20% 50% / 0.12;
+    --glass-highlight: 0 0% 100% / 0.9;
+    --glass-shade: 240 30% 30% / 0.06;
+
     --surface: 0 0% 100%;
     --surface-raised: 240 20% 99%;
-    --surface-sunken: 240 15% 97%;
+    --surface-sunken: 240 24% 96%;
 
-    /* Warm-neutral text ramp. Pure #000 on #fff is harsh to read for long
-       stretches; the darkest step here is deliberately short of black. */
-    --text: 240 10% 12%;
-    --text-secondary: 240 5% 40%;
-    --text-tertiary: 240 4% 56%;
-    --text-faint: 240 4% 70%;
+    --text: 240 18% 11%;
+    --text-secondary: 240 8% 38%;
+    --text-tertiary: 240 6% 52%;
+    --text-faint: 240 6% 68%;
 
-    /* Hairlines. Low-opacity strokes, never solid mid-greys. */
-    --line: 240 10% 90%;
-    --line-strong: 240 10% 84%;
+    --line: 240 16% 89%;
+    --line-strong: 240 14% 80%;
 
-    --accent: 244 55% 59%;
-    --accent-hover: 244 55% 53%;
-    --accent-soft: 244 60% 96%;
-    --accent-text: 244 50% 45%;
+    --accent: 248 72% 60%;
+    --accent-hover: 248 76% 55%;
+    --accent-soft: 248 70% 96%;
+    --accent-text: 248 62% 48%;
+    --accent-glow: 248 80% 62% / 0.35;
 
-    /* Semantic, and used nowhere else. */
-    --ai: 174 62% 33%;
-    --ai-soft: 174 45% 96%;
-    --creator: 265 55% 52%;
-    --creator-soft: 265 60% 97%;
-    --warn: 32 75% 42%;
-    --warn-soft: 38 80% 96%;
-    --danger: 355 62% 50%;
-    --danger-soft: 355 80% 97%;
+    --ai: 172 70% 36%;
+    --ai-soft: 172 55% 95%;
+    --ai-glow: 172 70% 45% / 0.3;
+    --creator: 268 62% 55%;
+    --creator-soft: 268 65% 96%;
+    --warn: 30 85% 45%;
+    --warn-soft: 36 90% 95%;
+    --danger: 352 70% 52%;
+    --danger-soft: 352 85% 96%;
 
-    --shadow-sm: 0 1px 2px hsl(240 10% 12% / 0.04);
-    --shadow: 0 1px 3px hsl(240 10% 12% / 0.06), 0 6px 16px -6px hsl(240 10% 12% / 0.08);
-    --shadow-lg: 0 2px 4px hsl(240 10% 12% / 0.04), 0 16px 40px -12px hsl(240 10% 12% / 0.16);
+    /* Ambient field hues — what the glass refracts. */
+    --aura-1: 248 85% 66%;
+    --aura-2: 172 70% 50%;
+    --aura-3: 285 75% 66%;
+    --aura-strength: 0.16;
+
+    --shadow-sm: 0 1px 2px hsl(240 30% 20% / 0.05);
+    --shadow-md: 0 2px 6px hsl(240 30% 20% / 0.06), 0 10px 24px -8px hsl(240 30% 20% / 0.1);
+    --shadow-lg: 0 4px 12px hsl(240 30% 20% / 0.07), 0 24px 56px -16px hsl(240 30% 20% / 0.18);
+    --shadow-xl: 0 8px 24px hsl(240 30% 20% / 0.1), 0 48px 88px -24px hsl(240 30% 20% / 0.26);
 
     color-scheme: light;
   }
 
-  /* Writers work at night. Dark mode is not a bonus feature for a tool whose
-     core surface is a wall of text. */
   :root[data-theme='dark'] {
-    --bg: 240 12% 7%;
-    --surface: 240 11% 9%;
-    --surface-raised: 240 10% 12%;
-    --surface-sunken: 240 14% 6%;
+    --bg: 245 30% 5%;
+    --bg-deep: 250 40% 3%;
 
-    --text: 240 15% 95%;
-    --text-secondary: 240 8% 68%;
-    --text-tertiary: 240 6% 52%;
-    --text-faint: 240 6% 40%;
+    /* Dark glass is a lighter film over darkness, not a darker rectangle. */
+    --glass-fill: 240 30% 60% / 0.08;
+    --glass-fill-strong: 240 30% 55% / 0.14;
+    --glass-border: 240 40% 80% / 0.12;
+    --glass-highlight: 0 0% 100% / 0.14;
+    --glass-shade: 0 0% 0% / 0.3;
 
-    --line: 240 8% 18%;
-    --line-strong: 240 8% 26%;
+    --surface: 240 24% 9%;
+    --surface-raised: 240 22% 12%;
+    --surface-sunken: 245 30% 6%;
 
-    --accent: 244 70% 70%;
-    --accent-hover: 244 75% 76%;
-    --accent-soft: 244 40% 16%;
-    --accent-text: 244 70% 76%;
+    --text: 240 30% 97%;
+    --text-secondary: 240 12% 72%;
+    --text-tertiary: 240 10% 56%;
+    --text-faint: 240 8% 42%;
 
-    --ai: 174 55% 55%;
-    --ai-soft: 174 40% 13%;
-    --creator: 265 70% 74%;
-    --creator-soft: 265 40% 15%;
-    --warn: 38 80% 62%;
-    --warn-soft: 38 40% 14%;
-    --danger: 355 75% 68%;
-    --danger-soft: 355 40% 15%;
+    --line: 240 20% 18%;
+    --line-strong: 240 20% 28%;
 
-    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.3);
-    --shadow: 0 1px 3px hsl(0 0% 0% / 0.4), 0 6px 16px -6px hsl(0 0% 0% / 0.5);
-    --shadow-lg: 0 2px 4px hsl(0 0% 0% / 0.4), 0 16px 40px -12px hsl(0 0% 0% / 0.6);
+    --accent: 250 90% 74%;
+    --accent-hover: 250 95% 80%;
+    --accent-soft: 250 50% 18%;
+    --accent-text: 250 90% 80%;
+    --accent-glow: 250 95% 70% / 0.5;
+
+    --ai: 172 70% 58%;
+    --ai-soft: 172 50% 14%;
+    --ai-glow: 172 80% 55% / 0.45;
+    --creator: 268 85% 76%;
+    --creator-soft: 268 45% 18%;
+    --warn: 36 92% 64%;
+    --warn-soft: 36 45% 15%;
+    --danger: 352 85% 70%;
+    --danger-soft: 352 45% 17%;
+
+    --aura-strength: 0.3;
+
+    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 2px 6px hsl(0 0% 0% / 0.5), 0 10px 24px -8px hsl(0 0% 0% / 0.6);
+    --shadow-lg: 0 4px 12px hsl(0 0% 0% / 0.5), 0 24px 56px -16px hsl(0 0% 0% / 0.7);
+    --shadow-xl: 0 8px 24px hsl(0 0% 0% / 0.6), 0 48px 88px -24px hsl(0 0% 0% / 0.8);
 
     color-scheme: dark;
   }
 
-  * {
-    border-color: hsl(var(--line));
-  }
+  * { border-color: hsl(var(--line)); }
 
   html {
     -webkit-font-smoothing: antialiased;
@@ -123,99 +144,190 @@
     font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
     font-size: 14px;
     line-height: 1.5;
-    /* Tracking tightens as size grows; at UI sizes a touch of negative
-       tracking is what stops Inter looking loose. */
     letter-spacing: -0.006em;
     font-variant-numeric: tabular-nums;
+    min-height: 100vh;
   }
 
-  /* Headings carry hierarchy through size and tracking, not weight. */
-  h1, h2, h3 {
-    font-weight: 500;
-    letter-spacing: -0.02em;
-  }
+  h1, h2, h3 { font-weight: 500; letter-spacing: -0.022em; }
 
-  /* One focus treatment everywhere. Visible, on-brand, and only for keyboard
-     users — a mouse click should not leave a ring behind. */
   :focus-visible {
     outline: 2px solid hsl(var(--accent));
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
-  ::selection {
-    background: hsl(var(--accent) / 0.22);
-  }
+  ::selection { background: hsl(var(--accent) / 0.25); }
 
-  /* Honour the OS setting. Anything that moves should stop moving. */
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--text) / 0.16);
+    border: 3px solid transparent;
+    border-radius: 99px;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--text) / 0.28); background-clip: content-box; }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+    .aura { display: none; }
   }
 }
 
 @layer components {
-  /* The script surface. This is the one place typography is allowed to be
-     generous, because it is the only thing on screen the creator is really
-     reading. */
+  /* ---------------------------------------------------------- the field --
+     Three slow-drifting colour fields. This is what the glass refracts; on a
+     flat background translucency is indistinguishable from opacity. Animated
+     with transform only, so it never triggers layout or paint. */
+  .aura {
+    position: fixed;
+    inset: -30vmax;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    background: hsl(var(--bg));
+  }
+
+  .aura::before,
+  .aura::after,
+  .aura > span {
+    content: '';
+    position: absolute;
+    width: 60vmax;
+    height: 60vmax;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: var(--aura-strength);
+    will-change: transform;
+  }
+
+  .aura::before {
+    background: radial-gradient(circle at center, hsl(var(--aura-1)) 0%, transparent 65%);
+    top: 4%; left: 12%;
+    animation: drift-a 26s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  .aura::after {
+    background: radial-gradient(circle at center, hsl(var(--aura-2)) 0%, transparent 65%);
+    bottom: 2%; right: 8%;
+    animation: drift-b 32s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  .aura > span {
+    background: radial-gradient(circle at center, hsl(var(--aura-3)) 0%, transparent 65%);
+    top: 38%; left: 52%;
+    animation: drift-c 38s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  @keyframes drift-a {
+    0%, 100% { transform: translate3d(0,0,0) scale(1); }
+    33%      { transform: translate3d(14vmax, 8vmax, 0) scale(1.14); }
+    66%      { transform: translate3d(-6vmax, 16vmax, 0) scale(0.92); }
+  }
+  @keyframes drift-b {
+    0%, 100% { transform: translate3d(0,0,0) scale(1.06); }
+    40%      { transform: translate3d(-16vmax, -10vmax, 0) scale(0.9); }
+    75%      { transform: translate3d(8vmax, -18vmax, 0) scale(1.18); }
+  }
+  @keyframes drift-c {
+    0%, 100% { transform: translate3d(0,0,0) scale(0.95); }
+    50%      { transform: translate3d(-12vmax, 12vmax, 0) scale(1.2); }
+  }
+
+  /* ---------------------------------------------------------- the glass --
+     Four layers, and all four matter:
+       fill        translucent body, saturated so colour behind comes through
+       highlight   1px specular edge along the top — the "lit" edge
+       shade       inset shadow at the bottom — the thickness of the material
+       shadow      cast beneath — separation from the field
+     Drop any one and it stops reading as an object and becomes a rectangle. */
+  .glass {
+    background: hsl(var(--glass-fill));
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow:
+      inset 0 1px 0 0 hsl(var(--glass-highlight)),
+      inset 0 -1px 0 0 hsl(var(--glass-shade)),
+      var(--shadow-md);
+  }
+
+  .glass-strong {
+    background: hsl(var(--glass-fill-strong));
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow:
+      inset 0 1px 0 0 hsl(var(--glass-highlight)),
+      inset 0 -1px 0 0 hsl(var(--glass-shade)),
+      var(--shadow-lg);
+  }
+
+  /* A specular glint that travels across a surface on hover. Apple animates
+     these on tilt; on the web, pointer entry is the honest equivalent. */
+  .sheen { position: relative; overflow: hidden; isolation: isolate; }
+  .sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.28) 50%, transparent 62%);
+    transform: translateX(-120%);
+    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .sheen:hover::after { transform: translateX(120%); }
+
+  /* ------------------------------------------------------------- script --
+     Deliberately the quietest surface in the system. */
   .prose-script {
     font-family: 'Newsreader Variable', ui-serif, Georgia, serif;
-    font-size: 18px;
-    line-height: 1.72;
+    font-size: 18.5px;
+    line-height: 1.74;
     letter-spacing: -0.003em;
     font-variant-numeric: normal;
   }
 
-  /* ~66 characters at 18px Newsreader. Past roughly 75 the eye loses the start
-     of the next line; under 45 it jumps too often. */
-  .measure {
-    max-width: 36rem;
+  .measure { max-width: 36rem; }
+
+  .display {
+    font-family: 'Newsreader Variable', ui-serif, Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.028em;
+    line-height: 1.04;
   }
 
-  .hairline {
-    border-width: 1px;
-    border-color: hsl(var(--line));
-  }
-
-  /* A subtle grain over flat surfaces. Not decoration: a completely flat
-     expanse of one colour is where banding shows on cheap panels. */
-  .surface {
-    background: hsl(var(--surface));
-  }
-
-  .sunken {
-    background: hsl(var(--surface-sunken));
+  /* Text that carries the accent as a gradient rather than a flat fill. Used
+     once per page at most. */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--text)) 20%, hsl(var(--accent)) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
 @layer utilities {
-  .animate-in {
-    animation: fade-up 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
+  .glow-accent { box-shadow: 0 0 0 1px hsl(var(--accent) / 0.4), 0 8px 30px -6px hsl(var(--accent-glow)); }
+  .glow-ai { box-shadow: 0 0 0 1px hsl(var(--ai) / 0.35), 0 8px 30px -6px hsl(var(--ai-glow)); }
 
-  .animate-sweep {
-    animation: sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  }
-
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: none; }
-  }
-
-  @keyframes sweep {
+  .animate-shimmer { animation: shimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+  @keyframes shimmer {
     0%   { transform: translateX(-100%); }
-    100% { transform: translateX(300%); }
+    100% { transform: translateX(320%); }
   }
 
+  .animate-breathe { animation: breathe 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
   @keyframes breathe {
-    0%, 100% { opacity: 0.35; }
-    50%      { opacity: 1; }
+    0%, 100% { opacity: 0.3; }
+    50%      { opacity: 0.85; }
   }
 
-  .animate-breathe {
-    animation: breathe 1.8s ease-in-out infinite;
-  }
+  .animate-orbit { animation: orbit 2.4s linear infinite; }
+  @keyframes orbit { to { transform: rotate(360deg); } }
 }

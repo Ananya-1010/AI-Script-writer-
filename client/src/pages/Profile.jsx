@@ -60,7 +60,7 @@ export default function Profile () {
   if (state === 'loading') return <Loading label="Loading your profile" lines={6} />
 
   return (
-    <div className="mx-auto max-w-xl animate-in">
+    <div className="mx-auto max-w-xl">
       <header className="mb-10">
         <h1 className="font-serif text-3xl text-content">Your creator profile</h1>
         <p className="mt-2 text-sm leading-relaxed text-content-tertiary">
@@ -119,7 +119,7 @@ export default function Profile () {
                     className={`rounded-full px-3 py-1.5 text-sm transition ease-out ${
                       active
                         ? 'bg-creator-soft text-creator ring-1 ring-creator/30'
-                        : 'text-content-secondary hairline hover:border-line-strong hover:text-content'
+                        : 'glass text-content-secondary hover:text-content'
                     }`}
                   >
                     {platform.label}

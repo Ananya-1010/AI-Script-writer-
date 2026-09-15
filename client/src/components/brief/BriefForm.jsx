@@ -104,7 +104,7 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
           <input
             id="duration" type="range" aria-label="Approximate length"
             min={platform.min} max={platform.max} step={platform.max > 600 ? 30 : 5}
-            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-surface-sunken accent-accent"
+            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[hsl(var(--text)/0.08)] accent-accent"
             value={form.durationSeconds}
             onChange={(e) => setForm({ ...form, durationSeconds: Number(e.target.value) })}
           />
@@ -161,7 +161,7 @@ function Chip ({ active, onClick, children }) {
       className={`rounded-full px-3 py-1.5 text-sm transition ease-out ${
         active
           ? 'bg-content text-bg'
-          : 'text-content-secondary hairline hover:border-line-strong hover:text-content'
+          : 'glass text-content-secondary hover:text-content'
       }`}
     >
       {children}
@@ -176,7 +176,7 @@ function Card ({ active, onClick, title, hint }) {
       className={`rounded-md px-3 py-2.5 text-left transition ease-out ${
         active
           ? 'bg-accent-soft ring-1 ring-accent/40'
-          : 'hairline hover:border-line-strong hover:bg-surface-raised'
+          : 'glass hover:bg-[hsl(var(--glass-fill-strong))]'
       }`}
     >
       <span className={`block text-sm font-medium ${active ? 'text-accent-text' : 'text-content'}`}>{title}</span>

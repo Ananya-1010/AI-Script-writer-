@@ -43,7 +43,7 @@ export default function Library () {
   const clear = () => setFilters({ q: '', platform: '', contentType: '', status: '' })
 
   return (
-    <div className="animate-in space-y-8">
+    <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl text-content">Library</h1>

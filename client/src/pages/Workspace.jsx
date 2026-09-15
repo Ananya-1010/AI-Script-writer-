@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { scripts as scriptsApi, profile as profileApi } from '../api/endpoints.js'
-import { Button, Panel, ErrorState, Loading, Status, Tag, formatDuration } from '../components/ui.jsx'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Button, ErrorState, Loading, Status, Tag, formatDuration } from '../components/ui.jsx'
+import { spring, springSoft } from '../lib/motion.js'
 import BriefForm from '../components/brief/BriefForm.jsx'
 import GenerationProgress from '../components/GenerationProgress.jsx'
 import ScriptEditor from '../components/editor/ScriptEditor.jsx'
@@ -20,6 +22,7 @@ import EvaluationPanel from '../components/evaluation/EvaluationPanel.jsx'
 export default function Workspace () {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const isNew = id === 'new'
 
   const [state, setState] = useState(isNew ? 'DRAFT' : 'LOADING')
@@ -48,7 +51,26 @@ export default function Workspace () {
       .then((data) => {
         setScript(data)
         setSections(data.script?.sections ?? [])
-        setState(data.script?.sections?.length ? (data.status === 'SAVED' ? 'SAVED' : 'SCRIPT_READY') : 'CONTEXT_READY')
+
+        if (data.script?.sections?.length) {
+          setState(data.status === 'SAVED' ? 'SAVED' : 'SCRIPT_READY')
+          return
+        }
+
+        // Arrived straight from the brief form, or reloaded mid-generation.
+        if (location.state?.autoGenerate) {
+          // Clear the flag so a later back-navigation does not regenerate and
+          // silently spend another call.
+          navigate(`/workspace/${id}`, { replace: true, state: {} })
+          setState('GENERATING')
+          scriptsApi.generate(id).then(applyResult).catch((err) => {
+            setError(err)
+            setState('GENERATION_FAILED')
+          })
+          return
+        }
+
+        setState('CONTEXT_READY')
       })
       .catch(setError)
   }, [id, isNew])
@@ -95,17 +117,29 @@ export default function Workspace () {
     setState('SCRIPT_READY')
   }
 
+  /**
+   * Create, then hand off to the destination route to generate.
+   *
+   * The obvious version — navigate and await the generation here — breaks:
+   * changing the path unmounts this component (routes animate in and out), so
+   * the awaited result resolves against an instance that no longer exists and
+   * the workspace sits in CONTEXT_READY forever.
+   *
+   * Handing off also makes a mid-generation refresh behave sensibly, because
+   * "a DRAFT with no sections" is a state the destination knows how to resume.
+   */
   const createAndGenerate = async (brief) => {
     setError(null)
     try {
       const created = await scriptsApi.create(brief)
-      setScript(created)
-      navigate(`/workspace/${created.scriptId}`, { replace: true })
-      applyResult(await run('Draft', () => scriptsApi.generate(created.scriptId)))
+      navigate(`/workspace/${created.scriptId}`, { replace: true, state: { autoGenerate: true } })
     } catch (err) {
-      setError((current) => current ?? err)
-      setState('GENERATION_FAILED')
+      setError(err)
     }
+  }
+
+  const generate = async () => {
+    try { applyResult(await run('Draft', () => scriptsApi.generate(id))) } catch { /* shown */ }
   }
 
   const regenerate = async () => {
@@ -162,10 +196,10 @@ export default function Workspace () {
   /* ---------------------------------------------------- new: the brief ---- */
   if (isNew && state === 'DRAFT') {
     return (
-      <div className="mx-auto max-w-xl animate-in py-4">
+      <div className="mx-auto max-w-xl py-4">
         <header className="mb-10">
-          <p className="text-xs uppercase tracking-[0.08em] text-content-tertiary">New script</p>
-          <h1 className="mt-2 font-serif text-3xl text-content">What are we writing?</h1>
+          <p className="text-[11px] uppercase tracking-[0.1em] text-content-tertiary">New script</p>
+          <h1 className="display mt-3 text-[clamp(2rem,3.4vw,2.7rem)] text-content">What are we <span className="text-gradient">writing</span>?</h1>
         </header>
 
         {profileLoaded
@@ -189,26 +223,36 @@ export default function Workspace () {
     <div className="mx-auto max-w-[57rem]">
       {/* Action bar. Sticks under the header so save is always reachable from
           the bottom of a long script. */}
-      <div className="sticky top-12 z-10 -mx-4 mb-8 border-b border-line bg-bg/85 px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm text-content">{script?.title}</p>
-            <div className="mt-0.5 flex items-center gap-2.5">
-              <Status tone={state === 'SAVED' ? 'accent' : busy ? 'ai' : 'neutral'}>
-                {busy ? 'generating' : state.toLowerCase().replace('_', ' ')}
-              </Status>
-              {dirty && <Tag tone="warn">unsaved</Tag>}
-            </div>
-          </div>
-
-          <div className="ml-auto flex items-center gap-1.5">
-            <Button size="sm" variant="ghost" onClick={() => navigate('/library')}>Library</Button>
-            <Button size="sm" variant={dirty ? 'primary' : 'secondary'} onClick={save} disabled={!dirty || busy}>
-              {dirty ? 'Save' : 'Saved'}
-            </Button>
+      <motion.div
+        initial={{ y: -12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={spring}
+        className="glass sticky top-[4.75rem] z-20 mb-10 flex flex-wrap items-center gap-3 rounded-2xl px-4 py-2.5"
+      >
+        <div className="min-w-0">
+          <p className="truncate text-sm text-content">{script?.title}</p>
+          <div className="mt-0.5 flex items-center gap-2.5">
+            <Status tone={state === 'SAVED' ? 'accent' : busy ? 'ai' : 'neutral'} pulse={busy}>
+              {busy ? 'generating' : state.toLowerCase().replace('_', ' ')}
+            </Status>
+            <AnimatePresence>
+              {dirty && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                  transition={spring}
+                >
+                  <Tag tone="warn">unsaved</Tag>
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+
+        <div className="ml-auto flex items-center gap-1.5">
+          <Button size="sm" variant="ghost" onClick={() => navigate('/library')}>Library</Button>
+          <Button size="sm" variant={dirty ? 'primary' : 'glass'} sheen={dirty} onClick={save} disabled={!dirty || busy}>
+            {dirty ? 'Save' : 'Saved'}
+          </Button>
+        </div>
+      </motion.div>
 
       <p aria-live="polite" className="sr-only">{announcement.current}</p>
 
@@ -218,6 +262,18 @@ export default function Workspace () {
           <ErrorState error={error} onRetry={state === 'GENERATION_FAILED' ? regenerate : undefined} className="mb-6" />
 
           {busy && <GenerationProgress retrievalEnabled={meta?.retrieval?.enabled} />}
+
+          {state === 'CONTEXT_READY' && !busy && (
+            <div className="measure py-12">
+              <p className="display text-2xl text-content">This brief has no draft yet.</p>
+              <p className="mt-2.5 text-sm leading-relaxed text-content-tertiary">
+                Everything it needs is saved. Generating will not change the brief.
+              </p>
+              <Button variant="primary" size="lg" sheen className="mt-6" onClick={generate}>
+                Generate the script
+              </Button>
+            </div>
+          )}
 
           {state === 'GENERATION_FAILED' && !busy && (
             <div className="measure py-10">
@@ -252,7 +308,7 @@ export default function Workspace () {
                   <button
                     key={variation.variationId}
                     onClick={() => adoptVariation(variation)}
-                    className="group rounded-md p-4 text-left hairline transition ease-out hover:border-accent/50 hover:bg-surface-raised"
+                    className="sheen group rounded-2xl glass p-4 text-left transition hover:glow-accent"
                   >
                     <p className="font-serif text-md leading-snug text-content">{variation.script.title}</p>
                     <p className="mt-2.5 line-clamp-5 font-serif text-sm leading-relaxed text-content-tertiary">
@@ -272,10 +328,10 @@ export default function Workspace () {
         <aside className="space-y-6 text-sm lg:sticky lg:top-28 lg:self-start">
           <Rail title="Refine">
             <div className="grid grid-cols-2 gap-1.5">
-              <Button size="sm" variant="secondary" disabled={busy || !sections.length} onClick={regenerate}>Regenerate</Button>
-              <Button size="sm" variant="secondary" disabled={busy || !sections.length} onClick={() => improve('change_tone')}>Change tone</Button>
-              <Button size="sm" variant="secondary" disabled={busy || !sections.length} onClick={() => improve('shorten')}>Shorten</Button>
-              <Button size="sm" variant="secondary" disabled={busy || !sections.length} onClick={() => improve('expand')}>Expand</Button>
+              <Button size="sm" variant="glass" disabled={busy || !sections.length} onClick={regenerate}>Regenerate</Button>
+              <Button size="sm" variant="glass" disabled={busy || !sections.length} onClick={() => improve('change_tone')}>Change tone</Button>
+              <Button size="sm" variant="glass" disabled={busy || !sections.length} onClick={() => improve('shorten')}>Shorten</Button>
+              <Button size="sm" variant="glass" disabled={busy || !sections.length} onClick={() => improve('expand')}>Expand</Button>
             </div>
             <Button size="sm" variant="ghost" className="mt-1.5 w-full" disabled={busy || !sections.length} onClick={requestVariations}>
               Give me 3 variations
@@ -283,7 +339,7 @@ export default function Workspace () {
           </Rail>
 
           {script?.brief && (
-            <Rail title="The brief">
+            <Rail title="The brief" delay={0.05}>
               <dl className="space-y-1.5 text-xs">
                 <Row label="Platform" value={script.brief.platform} />
                 <Row label="Type" value={script.brief.contentType.replace('_', ' ')} />
@@ -293,14 +349,14 @@ export default function Workspace () {
               <p className="mt-3 border-t border-line pt-3 text-xs leading-relaxed text-content-secondary">
                 {script.brief.objective}
               </p>
-              <p className="mt-2 text-micro text-content-faint">
+              <p className="mt-2 text-[11px] text-content-tertiary">
                 Preserved through every regeneration.
               </p>
             </Rail>
           )}
 
           {meta?.checks && (
-            <Rail title="Checks">
+            <Rail title="Checks" delay={0.1}>
               <ul className="space-y-1.5 text-xs">
                 <Check ok={meta.checks.requiredSectionsPresent}
                   label={meta.checks.missingSections?.length
@@ -311,14 +367,14 @@ export default function Workspace () {
                 <Check ok={meta.checks.platformReflected} label="Platform reflected" />
                 <Check ok={meta.checks.noPromptLeakage} label="No prompt leakage" />
               </ul>
-              <p className="mt-3 text-micro leading-relaxed text-content-faint">
+              <p className="mt-3 text-[11px] leading-relaxed text-content-tertiary">
                 These say the draft is <em>valid</em>. Whether it is <em>good</em> is the rating below.
               </p>
             </Rail>
           )}
 
           {meta?.usage && (
-            <Rail title="This generation">
+            <Rail title="This generation" delay={0.15}>
               <dl className="space-y-1.5 text-xs">
                 {/* "876 / 870" reads as a fraction. These are two separate
                     quantities and have to be labelled as such. */}
@@ -337,14 +393,22 @@ export default function Workspace () {
   )
 }
 
-/** Rail sections are headings and content — no cards. Cards in a sidebar make
-    the sidebar look as heavy as the thing it is annotating. */
-function Rail ({ title, children }) {
+/**
+ * Rail sections are glass panels at rail scale. They read as one stack of
+ * instruments beside the page rather than as a second column of content — the
+ * blur keeps the moving field visible behind them, which is what stops the rail
+ * feeling like a wall.
+ */
+function Rail ({ title, children, delay = 0 }) {
   return (
-    <section>
-      <h2 className="mb-2.5 text-micro font-medium uppercase tracking-[0.08em] text-content-tertiary">{title}</h2>
+    <motion.section
+      initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }}
+      transition={{ ...springSoft, delay }}
+      className="glass rounded-2xl p-4"
+    >
+      <h2 className="mb-3 text-[11px] font-medium uppercase tracking-[0.1em] text-content-tertiary">{title}</h2>
       {children}
-    </section>
+    </motion.section>
   )
 }
 

@@ -1,22 +1,25 @@
 import { useRef, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { SECTION_LABELS } from '../../api/endpoints.js'
 import { Button, formatDuration, countWords } from '../ui.jsx'
+import { springSoft, stagger } from '../../lib/motion.js'
 
 /**
- * The script is the page (spec 8.5).
+ * The script surface.
  *
- * Everything here follows from that one sentence:
- *   - Serif, 18px, 1.72 leading, capped at a ~68 character measure. This is the
- *     only surface in the app allowed to be typographically generous.
- *   - No cards, no borders around sections. A section is a left rule, a quiet
- *     label, and text. Boxes would make the script look like a form.
- *   - Section controls appear on hover and focus, not permanently. Chrome that
- *     is always visible competes with the words for attention.
- *   - Textareas grow to their content. A scrollbar inside a paragraph breaks
- *     the illusion that this is a document.
+ * Everything dramatic in this app happens in the chrome. Here the job is the
+ * opposite: serif, generous leading, a reading measure, and no boxes. The one
+ * piece of motion that earns its place is the arrival — sections rise in one
+ * after another in reading order, which turns "the response loaded" into "the
+ * draft is being laid down". After that it is a document, and it holds still.
  */
 
 const WORDS_PER_MINUTE = 150
+
+const sectionIn = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: springSoft }
+}
 
 export default function ScriptEditor ({
   script, sections, requestedDuration, onEdit, onImproveSection, busy
@@ -24,10 +27,10 @@ export default function ScriptEditor ({
   if (!script?.sections?.length) return null
 
   /**
-   * Measured from the text on screen, never from the model's own
+   * Measured from the words on screen, never from the model's own
    * estimatedDurationSeconds — the model reports the duration it was asked for,
-   * not the one it wrote. Measuring here also means the number moves as the
-   * creator edits, which is the entire reason to show it.
+   * not the one it wrote. Measuring here also means it moves as the creator
+   * edits, which is the entire reason to show it.
    */
   const words = sections.reduce((total, section) => total + countWords(section.body), 0)
   const estimated = Math.round((words / WORDS_PER_MINUTE) * 60)
@@ -35,38 +38,51 @@ export default function ScriptEditor ({
   const drifting = ratio < 0.6 || ratio > 1.4
 
   return (
-    <article className="animate-in">
-      <header className="mb-10">
-        <h1 className="font-serif text-3xl text-content measure">{script.title}</h1>
+    <article>
+      <motion.header
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={springSoft}
+        className="mb-12"
+      >
+        <h1 className="display measure text-[clamp(2rem,3.4vw,2.75rem)] text-content">{script.title}</h1>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-content-tertiary">
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-content-tertiary">
           <span title={`${words} words at ${WORDS_PER_MINUTE} words per minute`}>
-            {words} words · ~{formatDuration(estimated)} spoken
+            <span className="tabular-nums text-content-secondary">{words}</span> words
+            <span className="mx-1.5 text-content-faint">·</span>
+            ~{formatDuration(estimated)} spoken
           </span>
           {requestedDuration && (
             <>
-              <span aria-hidden="true">·</span>
+              <span aria-hidden="true" className="text-content-faint">·</span>
               <span className={drifting ? 'text-warn' : undefined}>
-                {formatDuration(requestedDuration)} requested
+                {formatDuration(requestedDuration)} asked for
                 {drifting && (estimated < requestedDuration ? ' — running short' : ' — running long')}
               </span>
             </>
           )}
         </div>
 
-        {/* Length as a bar rather than a sentence: drift is a magnitude, and a
-            magnitude is read faster than it is parsed. */}
+        {/* Drift as a magnitude: read faster than a sentence, and it moves
+            while the creator edits. */}
         {requestedDuration && (
-          <div className="mt-3 h-[3px] w-full max-w-sm overflow-hidden rounded-full bg-surface-sunken" role="presentation">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ease-out ${drifting ? 'bg-warn' : 'bg-ai'}`}
-              style={{ width: `${Math.min(ratio, 1.6) / 1.6 * 100}%` }}
+          <div className="mt-4 h-1 w-full max-w-sm overflow-hidden rounded-full bg-[hsl(var(--text)/0.07)]">
+            <motion.div
+              animate={{ scaleX: Math.min(ratio, 1.6) / 1.6 }}
+              transition={{ type: 'spring', stiffness: 110, damping: 22 }}
+              style={{ transformOrigin: 'left' }}
+              className={`h-full rounded-full bg-gradient-to-r ${drifting ? 'from-warn/60 to-warn' : 'from-ai/50 to-ai'}`}
             />
           </div>
         )}
-      </header>
+      </motion.header>
 
-      <div className="space-y-9">
+      {/* Keyed on the title so a regeneration replays the arrival — a new draft
+          should feel like it landed, not like text was swapped underneath. */}
+      <motion.div
+        key={script.title}
+        initial="hidden" animate="show" variants={stagger(0.07, 0.05)}
+        className="space-y-10"
+      >
         {sections.map((section) => (
           <Section
             key={section.order}
@@ -76,7 +92,7 @@ export default function ScriptEditor ({
             busy={busy}
           />
         ))}
-      </div>
+      </motion.div>
     </article>
   )
 }
@@ -95,7 +111,8 @@ function Section ({ section, onEdit, onImprove, busy }) {
   const kindLabel = SECTION_LABELS[section.kind] ?? section.kind
   const heading = meaningfulHeading(section.heading, section.kind, kindLabel)
 
-  // Grow to content. Re-run on every change so the box never scrolls.
+  // Grow to content. A scrollbar inside a paragraph breaks the illusion that
+  // this is a document rather than a form.
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -104,54 +121,43 @@ function Section ({ section, onEdit, onImprove, busy }) {
   }, [section.body])
 
   return (
-    <section
-      className={`group relative -ml-4 border-l-2 pl-4 transition-colors ease-out sm:-ml-6 sm:pl-6 ${
-        isCreator ? 'border-creator' : 'border-ai/35 hover:border-ai/70'
-      }`}
-    >
-      {/* Constrained to the measure so the controls land at the right edge of
-          the text rather than floating in the gutter beside it. */}
-      <div className="measure mb-2 flex items-center gap-2">
-        <span className="text-micro font-medium uppercase tracking-[0.08em] text-content-tertiary">
-          {kindLabel}
-        </span>
+    <motion.section variants={sectionIn} className="group relative">
+      {/* The authorship rule. A gradient so it has depth rather than reading as
+          a printed line, and it brightens when the section has focus. */}
+      <span
+        aria-hidden="true"
+        className={`absolute -left-4 top-1 h-[calc(100%-0.25rem)] w-[3px] rounded-full bg-gradient-to-b transition-opacity duration-500 sm:-left-6 ${
+          isCreator
+            ? 'from-creator to-creator/25 opacity-90'
+            : 'from-ai to-ai/20 opacity-45 group-hover:opacity-80 group-focus-within:opacity-100'
+        }`}
+      />
 
-        {/* The model often names a section after its own kind — "Hook" under
-            HOOK, "Transition One" under TRANSITION. Printing both is noise, so
-            the heading only shows when it actually says something new. */}
-        {heading && (
-          <span className="truncate text-xs text-content-faint">{heading}</span>
-        )}
+      <div className="measure mb-2.5 flex items-center gap-2">
+        <span className="text-[11px] font-medium uppercase tracking-[0.1em] text-content-tertiary">{kindLabel}</span>
+        {heading && <span className="truncate text-xs text-content-faint">{heading}</span>}
 
-        {/* Authorship: colour on the rule, plus a word. Never colour alone. */}
-        <span className={`text-micro ${isCreator ? 'text-creator' : 'text-ai'}`}>
+        <span className={`text-[11px] ${isCreator ? 'text-creator' : 'text-ai'}`}>
           {isCreator ? 'your words' : 'AI draft'}
         </span>
 
-        <span className="ml-auto flex items-center gap-1">
-          {/* Revealed on hover, and on keyboard focus so it is not
-              mouse-only — but always in the DOM, so it is never announced as
-              appearing and disappearing. */}
+        <span className="ml-auto flex items-center gap-1.5">
           {section.kind === 'hook' && (
             <Button
-              size="sm"
-              variant="ghost"
-              disabled={busy}
+              size="sm" variant="glass" disabled={busy}
               onClick={() => onImprove('improve_hook')}
               className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
             >
               Improve hook
             </Button>
           )}
-          <span className="text-micro tabular-nums text-content-faint opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="text-[11px] tabular-nums text-content-faint opacity-0 transition-opacity group-hover:opacity-100">
             {countWords(section.body)}w
           </span>
         </span>
       </div>
 
-      <label className="sr-only" htmlFor={`section-${section.order}`}>
-        {kindLabel} body
-      </label>
+      <label className="sr-only" htmlFor={`section-${section.order}`}>{kindLabel} body</label>
       <textarea
         ref={ref}
         id={`section-${section.order}`}
@@ -161,6 +167,6 @@ function Section ({ section, onEdit, onImprove, busy }) {
         spellCheck
         className="prose-script measure w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-content outline-none focus:ring-0"
       />
-    </section>
+    </motion.section>
   )
 }

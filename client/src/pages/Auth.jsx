@@ -1,80 +1,113 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuth } from '../state/AuthContext.jsx'
-import { Button, Field, inputClass, ErrorState, ThemeToggle } from '../components/ui.jsx'
+import { Button, Field, inputClass, ErrorState, ThemeToggle, Aura } from '../components/ui.jsx'
+import { spring, springSoft, stagger } from '../lib/motion.js'
 
 /**
- * Two panes. The left states what the product is, in the product's own voice
- * and in the serif the scripts are set in — so the first thing a creator sees
- * is the typography they will be writing in. The right is the form, and
- * nothing else.
+ * The first screen decides whether this feels like software worth writing in.
+ *
+ * The headline is set in the serif the scripts themselves use and revealed a
+ * line at a time, so the first thing anyone sees is the typography they will be
+ * working in. The form floats as glass over the living field — which is the
+ * whole point of the field: translucency is invisible without something moving
+ * behind it.
  */
+
+const HEADLINE = ['Turn your idea', 'into a script that', 'sounds like you.']
+
+const line = {
+  hidden: { opacity: 0, y: 26, filter: 'blur(10px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: springSoft }
+}
+
 function AuthShell ({ title, subtitle, children, footer }) {
   return (
-    <div className="min-h-screen bg-bg lg:grid lg:grid-cols-[1.1fr_1fr]">
-      {/* The headline block is centred as one unit rather than spread with
-          justify-between. Spreading three unequal blocks across a tall viewport
-          leaves two large voids and reads as an unfinished page. */}
-      <aside className="relative hidden flex-col overflow-hidden border-r border-line bg-surface-sunken p-10 lg:flex">
-        {/* A single soft accent wash. One gradient, low opacity, behind
-            everything — not a decorated card. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-accent/[0.07] blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-ai/[0.06] blur-3xl"
-        />
+    <div className="relative min-h-screen overflow-hidden lg:grid lg:grid-cols-[1.05fr_1fr]">
+      <Aura />
 
-        <div className="relative flex items-center gap-2 text-sm text-content-secondary">
-          <span aria-hidden="true" className="grid h-5 w-5 place-items-center rounded-sm bg-accent text-[10px] text-white">A</span>
-          AI Script Writer
-        </div>
+      {/* --------------------------------------------------------- stage -- */}
+      <aside className="relative hidden flex-col justify-center overflow-hidden p-12 xl:p-16 lg:flex">
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}
+          className="absolute left-12 top-12 flex items-center gap-2.5 xl:left-16 xl:top-16"
+        >
+          <Mark />
+          <span className="text-sm font-medium text-content">AI Script Writer</span>
+        </motion.div>
 
-        <div className="relative flex flex-1 flex-col justify-center py-10">
-          <p className="max-w-md font-serif text-3xl leading-[1.15] text-content">
-            Turn your idea into a script that fits your platform, audience,
-            purpose, and&nbsp;voice.
-          </p>
-          <p className="mt-5 max-w-sm text-sm leading-relaxed text-content-tertiary">
-            Not a chat box. Your context, your knowledge, a real structure, and
-            refinement that keeps what you already approved. You stay the author
-            the whole way through.
-          </p>
-
-          <ul className="mt-9 space-y-2.5 text-sm text-content-tertiary">
-            {[
-              'A structured draft in one pass, never a blank page',
-              'Every section editable, and marked as yours or the model’s',
-              'Refinements that preserve your original objective'
-            ].map((line) => (
-              <li key={line} className="flex gap-2.5">
-                <span aria-hidden="true" className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-accent" />
-                {line}
-              </li>
+        <motion.div initial="hidden" animate="show" variants={stagger(0.11, 0.15)} className="relative max-w-xl">
+          <h1 className="display text-[clamp(2.6rem,4.4vw,3.9rem)] text-content">
+            {HEADLINE.map((text, i) => (
+              <motion.span key={text} variants={line} className="block">
+                {i === HEADLINE.length - 1
+                  ? <span className="text-gradient">{text}</span>
+                  : text}
+              </motion.span>
             ))}
-          </ul>
-        </div>
+          </h1>
+
+          <motion.p variants={line} className="mt-7 max-w-md text-[15px] leading-relaxed text-content-secondary">
+            Not a chat box. Your context, your knowledge, a real structure, and
+            refinement that keeps what you already approved.
+          </motion.p>
+
+          <motion.ul variants={stagger(0.08, 0.5)} initial="hidden" animate="show" className="mt-10 space-y-3">
+            {[
+              ['A structured draft in one pass', 'Never a blank page.'],
+              ['Every section editable', 'Marked as yours or the model’s.'],
+              ['Refinements that hold your objective', 'Nothing drifts.']
+            ].map(([head, sub]) => (
+              <motion.li key={head} variants={line} className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br from-accent to-ai" />
+                <span className="text-sm text-content-secondary">
+                  {head} <span className="text-content-tertiary">{sub}</span>
+                </span>
+              </motion.li>
+            ))}
+          </motion.ul>
+        </motion.div>
       </aside>
 
-      <div className="relative flex min-h-screen items-center justify-center px-5 py-12">
-        <div className="absolute right-4 top-4"><ThemeToggle /></div>
+      {/* ---------------------------------------------------------- form -- */}
+      <div className="relative flex min-h-screen items-center justify-center px-5 py-14">
+        <div className="absolute right-5 top-5"><ThemeToggle /></div>
 
-        <div className="w-full max-w-[21rem] animate-in">
-          <h1 className="text-xl text-content">{title}</h1>
-          {subtitle && <p className="mt-1.5 text-sm text-content-tertiary">{subtitle}</p>}
+        <motion.div
+          initial={{ opacity: 0, y: 22, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ ...spring, delay: 0.1 }}
+          className="glass-strong w-full max-w-sm rounded-3xl p-8"
+        >
+          <div className="mb-7 flex items-center gap-2.5 lg:hidden">
+            <Mark /><span className="text-sm font-medium text-content">AI Script Writer</span>
+          </div>
+
+          <h2 className="display text-2xl text-content">{title}</h2>
+          {subtitle && <p className="mt-2 text-sm leading-relaxed text-content-tertiary">{subtitle}</p>}
 
           <div className="mt-7">{children}</div>
 
           <p className="mt-6 text-sm text-content-tertiary">{footer}</p>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
 }
 
-const link = 'text-accent-text underline-offset-4 hover:underline'
+function Mark () {
+  return (
+    <span
+      aria-hidden="true"
+      className="grid h-7 w-7 place-items-center rounded-[9px] bg-gradient-to-br from-accent to-creator text-[11px] font-medium text-white shadow-[inset_0_1px_0_0_hsl(0_0%_100%/0.35),0_4px_12px_-2px_hsl(var(--accent-glow))]"
+    >
+      A
+    </span>
+  )
+}
+
+const link = 'text-accent-text underline-offset-4 transition hover:underline'
 
 export function Login () {
   const { login } = useAuth()
@@ -86,23 +119,16 @@ export function Login () {
   const submit = async (event) => {
     event.preventDefault()
     setBusy(true); setError(null)
-    try {
-      await login(form)
-      navigate('/')
-    } catch (err) { setError(err) } finally { setBusy(false) }
+    try { await login(form); navigate('/') } catch (err) { setError(err) } finally { setBusy(false) }
   }
 
   return (
-    <AuthShell
-      title="Welcome back"
-      footer={<>No account yet? <Link className={link} to="/register">Create one</Link></>}
-    >
+    <AuthShell title="Welcome back" footer={<>No account yet? <Link className={link} to="/register">Create one</Link></>}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Email" htmlFor="email">
           <input id="email" type="email" required autoComplete="email" autoFocus className={inputClass}
             value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </Field>
-
         <Field label="Password" htmlFor="password">
           <input id="password" type="password" required autoComplete="current-password" className={inputClass}
             value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
@@ -110,7 +136,7 @@ export function Login () {
 
         <ErrorState error={error} />
 
-        <Button type="submit" variant="primary" size="lg" disabled={busy} className="w-full">
+        <Button type="submit" variant="primary" size="lg" sheen disabled={busy} className="w-full">
           {busy ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
@@ -128,12 +154,7 @@ export function Register () {
   const submit = async (event) => {
     event.preventDefault()
     setBusy(true); setError(null)
-    try {
-      await register(form)
-      // Straight to the profile: it is the largest single lever on output
-      // quality, and this is the one moment a creator expects setup.
-      navigate('/profile')
-    } catch (err) { setError(err) } finally { setBusy(false) }
+    try { await register(form); navigate('/profile') } catch (err) { setError(err) } finally { setBusy(false) }
   }
 
   return (
@@ -147,12 +168,10 @@ export function Register () {
           <input id="name" required autoComplete="name" autoFocus className={inputClass}
             value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </Field>
-
         <Field label="Email" htmlFor="email">
           <input id="email" type="email" required autoComplete="email" className={inputClass}
             value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </Field>
-
         <Field label="Password" hint="At least 10 characters. Length beats symbols." htmlFor="password">
           <input id="password" type="password" required minLength={10} autoComplete="new-password" className={inputClass}
             value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
@@ -160,7 +179,7 @@ export function Register () {
 
         <ErrorState error={error} />
 
-        <Button type="submit" variant="primary" size="lg" disabled={busy} className="w-full">
+        <Button type="submit" variant="primary" size="lg" sheen disabled={busy} className="w-full">
           {busy ? 'Creating…' : 'Create account'}
         </Button>
       </form>
