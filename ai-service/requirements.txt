@@ -6,6 +6,11 @@ python-dotenv==1.0.1
 httpx==0.27.2
 numpy==2.1.1
 
+# Only needed when VECTOR_STORE=mongo (Atlas Vector Search). Imported lazily so
+# the stub/in-memory path runs without a database at all.
+motor==3.6.0
+pymongo==4.9.1
+
 # dev / test
 pytest==8.3.3
 pytest-asyncio==0.24.0

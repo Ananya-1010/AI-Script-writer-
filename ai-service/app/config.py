@@ -40,10 +40,18 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1536
 
     retrieval_top_k: int = 6
-    # Spec 5.1 hardcodes 0.72. Cosine similarity on most embedding models puts
-    # genuinely relevant chunks well below that, so 0.72 would drop everything
-    # and quietly turn RAG into a no-op. Calibrate per model before trusting it.
-    retrieval_min_score: float = 0.35
+    # On the normalised [0, 1] scale defined in rag/vector_store.py, where 0.5
+    # means "unrelated" and 1.0 means "identical". NOT raw cosine — a value that
+    # is sane on one scale rejects everything on the other, which is precisely
+    # how retrieval ends up silently returning nothing.
+    # 0.70 is a starting point, not a measured value. Calibrate it in W3 against
+    # real embeddings by scoring known-relevant and known-irrelevant pairs.
+    retrieval_min_score: float = 0.70
+
+    # Used only when VECTOR_STORE=mongo. The AI service reads and writes the
+    # chunk collection and nothing else — all application state stays in Node.
+    ai_mongodb_uri: str = ""
+    ai_mongodb_db: str = "ai_script_writer"
 
     prompt_token_cap: int = 6000
     brief_max_chars: int = 5000
