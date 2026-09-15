@@ -1,4 +1,8 @@
-@import '@fontsource-variable/inter';
+/* Fraunces — variable display serif with optical-size and "wonk" axes. High
+   contrast, editorial, with actual personality. Instrument Sans for interface.
+   Newsreader for the script body, because that is text meant to be read. */
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/instrument-sans';
 @import '@fontsource-variable/newsreader';
 
 @tailwind base;
@@ -6,131 +10,110 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   AI Script Writer — material and motion system
+   AI SCRIPT WRITER — editorial system
 
-   Built against Apple's Liquid Glass language rather than flat productivity
-   UI. Three things carry it:
+   The product is a writing instrument, so the reference is print, not software:
+   paper stock, ink, and an editor's red pencil.
 
-   1. MATERIAL. Surfaces are layered glass, not painted rectangles. Every
-      raised surface has a translucent fill, a 1px specular highlight along its
-      top edge, an inner shadow at the bottom, and an outer shadow beneath.
-      That four-part stack is what makes a panel read as a physical object.
+   FOUR DECISIONS EVERYTHING ELSE FOLLOWS FROM
 
-   2. LIGHT. There is a living gradient field behind everything. Glass needs
-      something to refract, and a flat background makes translucency invisible.
+   1. WARM NEUTRAL GROUND, NOT GREY OR BLACK.
+      Bone and sand instead of white; warm charcoal instead of #000. Cool greys
+      and near-black read as software chrome; warm neutrals read as stock you
+      would print on.
 
-   3. MOTION. Springs, not linear fades. Physical easing is the difference
-      between "the page changed" and "the object moved".
+   2. ONE INTENTIONAL ACCENT: VERMILION.
+      The editor's red pencil. It appears on the creator's own words, the
+      primary action, and nothing else. Violet-on-black is the default AI-SaaS
+      palette and says nothing about writing.
 
-   The script surface stays typographically quiet under all of it — the draft is
-   still the page (spec 8.5). Drama belongs to the chrome, never to the words.
+   3. AUTHORSHIP IS SEMANTIC COLOUR.
+      The creator's words carry the red pencil. The model's draft carries
+      graphite. That mapping is the product's core rule expressed as pigment,
+      not decoration.
+
+   4. TEXTURE OVER GLOSS.
+      Real grain, a hairline rule, generous margins. The field is explicitly
+      moving away from AI-smooth gradients and glass; imperfection reads human,
+      and this is a tool for humans who write.
    ========================================================================== */
 
 @layer base {
   :root {
-    /* Base field */
-    --bg: 240 20% 98%;
-    --bg-deep: 245 30% 96%;
+    /* Paper stock */
+    --paper: 42 38% 96%;        /* bone */
+    --paper-deep: 40 30% 92%;   /* sand, for recessed areas */
+    --paper-raised: 44 50% 98%; /* a sheet lifted off the desk */
 
-    /* Glass is expressed as fill + border + highlight, not a solid colour. */
-    --glass-fill: 0 0% 100% / 0.72;
-    --glass-fill-strong: 0 0% 100% / 0.86;
-    --glass-border: 240 20% 50% / 0.12;
-    --glass-highlight: 0 0% 100% / 0.9;
-    --glass-shade: 240 30% 30% / 0.06;
+    /* Ink */
+    --ink: 24 16% 12%;          /* warm charcoal, never #000 */
+    --ink-secondary: 26 10% 34%;
+    --ink-tertiary: 28 8% 48%;
+    --ink-faint: 30 8% 64%;
 
-    --surface: 0 0% 100%;
-    --surface-raised: 240 20% 99%;
-    --surface-sunken: 240 24% 96%;
+    --rule: 32 16% 84%;         /* hairline */
+    --rule-strong: 30 14% 72%;
 
-    --text: 240 18% 11%;
-    --text-secondary: 240 8% 38%;
-    --text-tertiary: 240 6% 52%;
-    --text-faint: 240 6% 68%;
+    /* The red pencil. One accent, used sparingly. */
+    --pencil: 10 74% 47%;
+    --pencil-deep: 10 78% 40%;
+    --pencil-soft: 12 70% 95%;
 
-    --line: 240 16% 89%;
-    --line-strong: 240 14% 80%;
+    /* Graphite — the model's draft */
+    --graphite: 200 14% 38%;
+    --graphite-soft: 200 20% 93%;
 
-    --accent: 248 72% 60%;
-    --accent-hover: 248 76% 55%;
-    --accent-soft: 248 70% 96%;
-    --accent-text: 248 62% 48%;
-    --accent-glow: 248 80% 62% / 0.35;
+    /* Support */
+    --sage: 118 18% 36%;        /* passing checks */
+    --sage-soft: 118 26% 93%;
+    --ochre: 34 76% 40%;        /* attention */
+    --ochre-soft: 36 72% 93%;
 
-    --ai: 172 70% 36%;
-    --ai-soft: 172 55% 95%;
-    --ai-glow: 172 70% 45% / 0.3;
-    --creator: 268 62% 55%;
-    --creator-soft: 268 65% 96%;
-    --warn: 30 85% 45%;
-    --warn-soft: 36 90% 95%;
-    --danger: 352 70% 52%;
-    --danger-soft: 352 85% 96%;
+    --shadow-sm: 0 1px 2px hsl(24 30% 14% / 0.06);
+    --shadow-md: 0 1px 2px hsl(24 30% 14% / 0.05), 0 8px 20px -8px hsl(24 30% 14% / 0.12);
+    --shadow-lg: 0 2px 4px hsl(24 30% 14% / 0.06), 0 22px 48px -16px hsl(24 30% 14% / 0.2);
 
-    /* Ambient field hues — what the glass refracts. */
-    --aura-1: 248 85% 66%;
-    --aura-2: 172 70% 50%;
-    --aura-3: 285 75% 66%;
-    --aura-strength: 0.16;
-
-    --shadow-sm: 0 1px 2px hsl(240 30% 20% / 0.05);
-    --shadow-md: 0 2px 6px hsl(240 30% 20% / 0.06), 0 10px 24px -8px hsl(240 30% 20% / 0.1);
-    --shadow-lg: 0 4px 12px hsl(240 30% 20% / 0.07), 0 24px 56px -16px hsl(240 30% 20% / 0.18);
-    --shadow-xl: 0 8px 24px hsl(240 30% 20% / 0.1), 0 48px 88px -24px hsl(240 30% 20% / 0.26);
+    --grain-opacity: 0.26;
 
     color-scheme: light;
   }
 
+  /* Night stock: roasted paper, not blue-black. Same warmth, lights out. */
   :root[data-theme='dark'] {
-    --bg: 245 30% 5%;
-    --bg-deep: 250 40% 3%;
+    --paper: 26 14% 9%;
+    --paper-deep: 24 16% 6%;
+    --paper-raised: 26 12% 13%;
 
-    /* Dark glass is a lighter film over darkness, not a darker rectangle. */
-    --glass-fill: 240 30% 60% / 0.08;
-    --glass-fill-strong: 240 30% 55% / 0.14;
-    --glass-border: 240 40% 80% / 0.12;
-    --glass-highlight: 0 0% 100% / 0.14;
-    --glass-shade: 0 0% 0% / 0.3;
+    --ink: 40 32% 93%;
+    --ink-secondary: 36 12% 70%;
+    --ink-tertiary: 34 9% 55%;
+    --ink-faint: 32 8% 40%;
 
-    --surface: 240 24% 9%;
-    --surface-raised: 240 22% 12%;
-    --surface-sunken: 245 30% 6%;
+    --rule: 28 12% 22%;
+    --rule-strong: 28 12% 34%;
 
-    --text: 240 30% 97%;
-    --text-secondary: 240 12% 72%;
-    --text-tertiary: 240 10% 56%;
-    --text-faint: 240 8% 42%;
+    --pencil: 10 82% 62%;
+    --pencil-deep: 10 84% 68%;
+    --pencil-soft: 10 40% 18%;
 
-    --line: 240 20% 18%;
-    --line-strong: 240 20% 28%;
+    --graphite: 200 18% 62%;
+    --graphite-soft: 205 20% 18%;
 
-    --accent: 250 90% 74%;
-    --accent-hover: 250 95% 80%;
-    --accent-soft: 250 50% 18%;
-    --accent-text: 250 90% 80%;
-    --accent-glow: 250 95% 70% / 0.5;
-
-    --ai: 172 70% 58%;
-    --ai-soft: 172 50% 14%;
-    --ai-glow: 172 80% 55% / 0.45;
-    --creator: 268 85% 76%;
-    --creator-soft: 268 45% 18%;
-    --warn: 36 92% 64%;
-    --warn-soft: 36 45% 15%;
-    --danger: 352 85% 70%;
-    --danger-soft: 352 45% 17%;
-
-    --aura-strength: 0.3;
+    --sage: 118 30% 58%;
+    --sage-soft: 118 24% 15%;
+    --ochre: 38 84% 62%;
+    --ochre-soft: 36 40% 16%;
 
     --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.4);
-    --shadow-md: 0 2px 6px hsl(0 0% 0% / 0.5), 0 10px 24px -8px hsl(0 0% 0% / 0.6);
-    --shadow-lg: 0 4px 12px hsl(0 0% 0% / 0.5), 0 24px 56px -16px hsl(0 0% 0% / 0.7);
-    --shadow-xl: 0 8px 24px hsl(0 0% 0% / 0.6), 0 48px 88px -24px hsl(0 0% 0% / 0.8);
+    --shadow-md: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 20px -8px hsl(0 0% 0% / 0.6);
+    --shadow-lg: 0 2px 4px hsl(0 0% 0% / 0.5), 0 22px 48px -16px hsl(0 0% 0% / 0.75);
+
+    --grain-opacity: 0.55;
 
     color-scheme: dark;
   }
 
-  * { border-color: hsl(var(--line)); }
+  * { border-color: hsl(var(--rule)); }
 
   html {
     -webkit-font-smoothing: antialiased;
@@ -139,35 +122,55 @@
   }
 
   body {
-    background: hsl(var(--bg));
-    color: hsl(var(--text));
-    font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    letter-spacing: -0.006em;
+    background: hsl(var(--paper));
+    color: hsl(var(--ink));
+    font-family: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
     font-variant-numeric: tabular-nums;
     min-height: 100vh;
   }
 
-  h1, h2, h3 { font-weight: 500; letter-spacing: -0.022em; }
-
-  :focus-visible {
-    outline: 2px solid hsl(var(--accent));
-    outline-offset: 2px;
-    border-radius: 6px;
+  /*
+    THE GRAIN.
+    A tiny SVG turbulence tiled over everything at very low opacity. It is what
+    stops large flat areas of warm neutral from looking like a flat fill, and it
+    is the cheapest way to make a screen read as stock rather than as a canvas.
+    Fixed, non-interactive, and it never repaints.
+  */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -200%;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
   }
 
-  ::selection { background: hsl(var(--accent) / 0.25); }
+  :root[data-theme='dark'] body::before { mix-blend-mode: screen; opacity: 0.18; }
 
-  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  h1, h2, h3 { font-weight: 400; }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--pencil));
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection { background: hsl(var(--pencil) / 0.22); }
+
+  ::-webkit-scrollbar { width: 12px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--text) / 0.16);
-    border: 3px solid transparent;
+    background: hsl(var(--ink) / 0.18);
+    border: 4px solid transparent;
     border-radius: 99px;
     background-clip: content-box;
   }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--text) / 0.28); background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--ink) / 0.3); background-clip: content-box; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -175,159 +178,88 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
-    .aura { display: none; }
   }
 }
 
 @layer components {
-  /* ---------------------------------------------------------- the field --
-     Three slow-drifting colour fields. This is what the glass refracts; on a
-     flat background translucency is indistinguishable from opacity. Animated
-     with transform only, so it never triggers layout or paint. */
-  .aura {
-    position: fixed;
-    inset: -30vmax;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-    background: hsl(var(--bg));
+  /* --------------------------------------------------------- typography --
+     Display uses Fraunces with its optical-size axis pushed high and a touch
+     of "wonk", which is what gives it the drawn, slightly irregular feel a
+     neutral serif does not have. */
+  .display {
+    font-family: 'Fraunces Variable', ui-serif, Georgia, serif;
+    font-variation-settings: 'SOFT' 0, 'WONK' 1, 'opsz' 100;
+    font-weight: 400;
+    letter-spacing: -0.026em;
+    line-height: 0.98;
   }
 
-  .aura::before,
-  .aura::after,
-  .aura > span {
-    content: '';
-    position: absolute;
-    width: 60vmax;
-    height: 60vmax;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: var(--aura-strength);
-    will-change: transform;
+  .display-tight { line-height: 0.92; letter-spacing: -0.034em; }
+
+  /* Small caps-ish label. Editorial furniture: the standfirst, the folio. */
+  .label {
+    font-family: 'Instrument Sans Variable', ui-sans-serif, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
-  .aura::before {
-    background: radial-gradient(circle at center, hsl(var(--aura-1)) 0%, transparent 65%);
-    top: 4%; left: 12%;
-    animation: drift-a 26s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  }
-
-  .aura::after {
-    background: radial-gradient(circle at center, hsl(var(--aura-2)) 0%, transparent 65%);
-    bottom: 2%; right: 8%;
-    animation: drift-b 32s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  }
-
-  .aura > span {
-    background: radial-gradient(circle at center, hsl(var(--aura-3)) 0%, transparent 65%);
-    top: 38%; left: 52%;
-    animation: drift-c 38s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  }
-
-  @keyframes drift-a {
-    0%, 100% { transform: translate3d(0,0,0) scale(1); }
-    33%      { transform: translate3d(14vmax, 8vmax, 0) scale(1.14); }
-    66%      { transform: translate3d(-6vmax, 16vmax, 0) scale(0.92); }
-  }
-  @keyframes drift-b {
-    0%, 100% { transform: translate3d(0,0,0) scale(1.06); }
-    40%      { transform: translate3d(-16vmax, -10vmax, 0) scale(0.9); }
-    75%      { transform: translate3d(8vmax, -18vmax, 0) scale(1.18); }
-  }
-  @keyframes drift-c {
-    0%, 100% { transform: translate3d(0,0,0) scale(0.95); }
-    50%      { transform: translate3d(-12vmax, 12vmax, 0) scale(1.2); }
-  }
-
-  /* ---------------------------------------------------------- the glass --
-     Four layers, and all four matter:
-       fill        translucent body, saturated so colour behind comes through
-       highlight   1px specular edge along the top — the "lit" edge
-       shade       inset shadow at the bottom — the thickness of the material
-       shadow      cast beneath — separation from the field
-     Drop any one and it stops reading as an object and becomes a rectangle. */
-  .glass {
-    background: hsl(var(--glass-fill));
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow:
-      inset 0 1px 0 0 hsl(var(--glass-highlight)),
-      inset 0 -1px 0 0 hsl(var(--glass-shade)),
-      var(--shadow-md);
-  }
-
-  .glass-strong {
-    background: hsl(var(--glass-fill-strong));
-    backdrop-filter: blur(40px) saturate(200%);
-    -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow:
-      inset 0 1px 0 0 hsl(var(--glass-highlight)),
-      inset 0 -1px 0 0 hsl(var(--glass-shade)),
-      var(--shadow-lg);
-  }
-
-  /* A specular glint that travels across a surface on hover. Apple animates
-     these on tilt; on the web, pointer entry is the honest equivalent. */
-  .sheen { position: relative; overflow: hidden; isolation: isolate; }
-  .sheen::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background: linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.28) 50%, transparent 62%);
-    transform: translateX(-120%);
-    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .sheen:hover::after { transform: translateX(120%); }
-
-  /* ------------------------------------------------------------- script --
-     Deliberately the quietest surface in the system. */
+  /* The script itself. The quietest, most readable surface in the product. */
   .prose-script {
     font-family: 'Newsreader Variable', ui-serif, Georgia, serif;
-    font-size: 18.5px;
-    line-height: 1.74;
-    letter-spacing: -0.003em;
+    font-size: 19px;
+    line-height: 1.7;
+    letter-spacing: -0.002em;
     font-variant-numeric: normal;
   }
 
-  .measure { max-width: 36rem; }
+  /* ~66 characters at 19px. */
+  .measure { max-width: 37rem; }
+  .measure-tight { max-width: 30rem; }
 
-  .display {
-    font-family: 'Newsreader Variable', ui-serif, Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.028em;
-    line-height: 1.04;
+  /* ------------------------------------------------------------- sheets --
+     A sheet of stock: warm fill, hairline, a whisper of lift. No blur, no
+     translucency — this system earns depth from paper, not from glass. */
+  .sheet {
+    background: hsl(var(--paper-raised));
+    border: 1px solid hsl(var(--rule));
+    box-shadow: var(--shadow-sm);
   }
 
-  /* Text that carries the accent as a gradient rather than a flat fill. Used
-     once per page at most. */
-  .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--text)) 20%, hsl(var(--accent)) 130%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .sheet-lifted { box-shadow: var(--shadow-md); }
+
+  /* A rule with an editorial tick at its left end. */
+  .rule-tick {
+    border-top: 1px solid hsl(var(--rule));
+    position: relative;
   }
+  .rule-tick::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 0;
+    width: 2.5rem; height: 2px;
+    background: hsl(var(--pencil));
+  }
+
+  /* Underline that draws itself on hover — a pencil stroke, not a border. */
+  .stroke-link {
+    background-image: linear-gradient(hsl(var(--pencil)), hsl(var(--pencil)));
+    background-size: 0% 1.5px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .stroke-link:hover { background-size: 100% 1.5px; }
 }
 
 @layer utilities {
-  .glow-accent { box-shadow: 0 0 0 1px hsl(var(--accent) / 0.4), 0 8px 30px -6px hsl(var(--accent-glow)); }
-  .glow-ai { box-shadow: 0 0 0 1px hsl(var(--ai) / 0.35), 0 8px 30px -6px hsl(var(--ai-glow)); }
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
 
-  .animate-shimmer { animation: shimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-  @keyframes shimmer {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX(320%); }
-  }
+  .animate-marquee { animation: marquee 38s linear infinite; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
 
   .animate-breathe { animation: breathe 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-  @keyframes breathe {
-    0%, 100% { opacity: 0.3; }
-    50%      { opacity: 0.85; }
-  }
-
-  .animate-orbit { animation: orbit 2.4s linear infinite; }
-  @keyframes orbit { to { transform: rotate(360deg); } }
+  @keyframes breathe { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.7; } }
 }

@@ -1,15 +1,15 @@
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../state/AuthContext.jsx'
-import { Button, ThemeToggle, Aura } from './ui.jsx'
-import { pageTransition, spring } from '../lib/motion.js'
+import { ThemeToggle, Wordmark } from './ui.jsx'
+import { pageTransition } from '../lib/motion.js'
 
 /**
- * A floating glass bar over the living field, not a bordered strip.
+ * A masthead, not a toolbar.
  *
- * The active tab is a shared layout element: `layoutId` makes the pill travel
- * between tabs instead of disappearing and reappearing, so navigation reads as
- * one object moving rather than two states swapping.
+ * One hairline, no fill, no shadow. The active tab is marked by a short rule
+ * beneath the word — a folio mark — and that rule is a shared layout element,
+ * so it slides between tabs rather than blinking off and on.
  */
 export default function Layout () {
   const { user, logout } = useAuth()
@@ -17,51 +17,37 @@ export default function Layout () {
   const composing = location.pathname.startsWith('/workspace')
 
   return (
-    <div className="relative min-h-screen">
-      <Aura />
+    <div className="min-h-screen bg-paper">
+      <header className="sticky top-0 z-40 border-b border-rule bg-paper/90 backdrop-blur-sm">
+        <div className={`mx-auto flex h-16 items-center px-6 lg:px-10 ${composing ? 'max-w-shelf' : 'max-w-6xl'}`}>
+          <Link to="/dashboard" className="mr-10"><Wordmark /></Link>
 
-      <header className="sticky top-0 z-30 px-3 pt-3 sm:px-5 sm:pt-4">
-        <motion.div
-          initial={{ y: -16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={spring}
-          className={`glass mx-auto flex h-14 items-center gap-1 rounded-2xl px-3 py-2 ${composing ? 'max-w-[74rem]' : 'max-w-5xl'}`}
-        >
-          <Link to="/" className="group mr-4 flex items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              className="grid h-6 w-6 place-items-center rounded-lg bg-gradient-to-br from-accent to-creator text-[10px] font-medium text-white shadow-[inset_0_1px_0_0_hsl(0_0%_100%/0.35),0_3px_10px_-2px_hsl(var(--accent-glow))] transition-transform group-hover:scale-110"
-            >
-              A
-            </span>
-            <span className="hidden text-sm font-medium text-content sm:inline">Script Writer</span>
-          </Link>
-
-          <nav className="flex items-center gap-0.5">
-            <Tab to="/" end>Dashboard</Tab>
+          <nav className="flex items-center gap-7">
+            <Tab to="/dashboard">Dashboard</Tab>
             <Tab to="/library">Library</Tab>
             <Tab to="/profile">Profile</Tab>
           </nav>
 
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-5">
             <ThemeToggle />
-            <span className="hidden max-w-[16ch] truncate px-2 text-xs text-content-tertiary md:inline">{user?.email}</span>
-            <Button size="sm" variant="ghost" onClick={logout}>Sign out</Button>
+            <span className="hidden max-w-[18ch] truncate text-xs text-ink-tertiary md:inline">{user?.email}</span>
+            <button onClick={logout} className="stroke-link text-sm text-ink-secondary">Sign out</button>
           </div>
-        </motion.div>
+        </div>
       </header>
 
       {/*
-        Keyed on the SECTION, not the full pathname.
-        Moving between Dashboard / Library / Workspace should animate. Moving
-        *within* the workspace — /workspace/new to /workspace/:id after the
-        brief is submitted — must not, because remounting there destroys the
-        component that is awaiting the generation and the draft lands on an
-        instance that no longer exists.
+        Keyed on the SECTION, not the full pathname. Moving between Dashboard,
+        Library and Workspace should animate; moving *within* the workspace —
+        /workspace/new to /workspace/:id after the brief is submitted — must
+        not, because remounting there destroys the component awaiting the
+        generation.
       */}
       <AnimatePresence mode="wait">
         <motion.main
           key={location.pathname.split('/')[1] || 'home'}
           {...pageTransition}
-          className={composing ? 'px-4 py-8 sm:px-6' : 'mx-auto max-w-5xl px-4 py-10 sm:px-6'}
+          className={composing ? 'px-6 py-10 lg:px-10' : 'mx-auto max-w-6xl px-6 py-14 lg:px-10'}
         >
           <Outlet />
         </motion.main>
@@ -70,22 +56,22 @@ export default function Layout () {
   )
 }
 
-function Tab ({ to, end, children }) {
+function Tab ({ to, children }) {
   return (
-    <NavLink to={to} end={end} className="relative rounded-xl px-3 py-1.5 text-sm outline-none">
+    <NavLink to={to} className="relative py-1 text-sm outline-none">
       {({ isActive }) => (
         <>
-          {isActive && (
-            <motion.span
-              layoutId="tab-pill"
-              aria-hidden="true"
-              transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-              className="absolute inset-0 rounded-xl bg-[hsl(var(--text)/0.07)] shadow-[inset_0_1px_0_0_hsl(var(--glass-highlight))]"
-            />
-          )}
-          <span className={`relative transition-colors ${isActive ? 'text-content' : 'text-content-tertiary hover:text-content-secondary'}`}>
+          <span className={`transition-colors duration-DEFAULT ${isActive ? 'text-ink' : 'text-ink-tertiary hover:text-ink-secondary'}`}>
             {children}
           </span>
+          {isActive && (
+            <motion.span
+              layoutId="folio-rule"
+              aria-hidden="true"
+              transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+              className="absolute -bottom-[21px] left-0 h-[2px] w-full bg-pencil"
+            />
+          )}
         </>
       )}
     </NavLink>

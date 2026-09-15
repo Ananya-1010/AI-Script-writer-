@@ -5,49 +5,44 @@ import { spring, springSnap, riseIn, stagger, ease } from '../lib/motion.js'
 
 const cx = (...parts) => parts.filter(Boolean).join(' ')
 
-/* ---------------------------------------------------------------- Aura -- */
-
-/** The living colour field. Mounted once, behind everything. */
-export function Aura () {
-  return <div className="aura" aria-hidden="true"><span /></div>
-}
-
 /* -------------------------------------------------------------- Button -- */
 
 const VARIANTS = {
-  primary: `
-    text-white
-    bg-gradient-to-b from-accent to-accent-hover
-    shadow-[inset_0_1px_0_0_hsl(0_0%_100%/0.28),0_1px_2px_hsl(240_30%_20%/0.2),0_8px_24px_-8px_hsl(var(--accent-glow))]
-    hover:shadow-[inset_0_1px_0_0_hsl(0_0%_100%/0.34),0_2px_4px_hsl(240_30%_20%/0.22),0_14px_34px_-8px_hsl(var(--accent-glow))]
-    disabled:from-content-faint disabled:to-content-faint disabled:shadow-none
+  /* The red pencil. One of these per view, and nowhere else. */
+  ink: `
+    bg-ink text-paper
+    hover:bg-pencil
+    disabled:bg-ink-faint disabled:text-paper
   `,
-  glass: `
-    glass text-content
-    hover:bg-[hsl(var(--glass-fill-strong))]
-    disabled:text-content-faint
+  pencil: `
+    bg-pencil text-white
+    hover:bg-pencil-deep
+    disabled:bg-ink-faint
   `,
-  ghost: 'text-content-secondary hover:text-content hover:bg-[hsl(var(--text)/0.05)] disabled:text-content-faint',
-  danger: 'text-danger hover:bg-danger-soft disabled:text-content-faint'
+  outline: `
+    border border-rule-strong text-ink bg-transparent
+    hover:border-ink hover:bg-ink hover:text-paper
+    disabled:border-rule disabled:text-ink-faint disabled:hover:bg-transparent disabled:hover:text-ink-faint
+  `,
+  quiet: 'text-ink-secondary hover:text-ink disabled:text-ink-faint',
+  danger: 'text-pencil hover:bg-pencil-soft disabled:text-ink-faint'
 }
 
 const SIZES = {
-  sm: 'h-7 px-2.5 text-xs gap-1.5 rounded-lg',
-  md: 'h-9 px-3.5 text-sm gap-2 rounded-[10px]',
-  lg: 'h-11 px-5 text-md gap-2 rounded-xl'
+  sm: 'h-8 px-3 text-xs gap-1.5',
+  md: 'h-10 px-4 text-sm gap-2',
+  lg: 'h-12 px-6 text-base gap-2.5'
 }
 
-export function Button ({ variant = 'glass', size = 'md', className, sheen = false, ...props }) {
+export function Button ({ variant = 'outline', size = 'md', className, ...props }) {
   return (
     <motion.button
-      whileTap={props.disabled ? undefined : { scale: 0.975 }}
+      whileTap={props.disabled ? undefined : { scale: 0.98 }}
       transition={springSnap}
       {...props}
       className={cx(
-        'relative inline-flex select-none items-center justify-center whitespace-nowrap font-medium',
-        'transition-[background,box-shadow,color] duration-300 ease-out',
-        'disabled:pointer-events-none',
-        sheen && 'sheen',
+        'inline-flex select-none items-center justify-center whitespace-nowrap rounded-sm font-medium',
+        'transition-colors duration-DEFAULT ease-out disabled:pointer-events-none',
         VARIANTS[variant], SIZES[size], className
       )}
     />
@@ -56,60 +51,67 @@ export function Button ({ variant = 'glass', size = 'md', className, sheen = fal
 
 /* --------------------------------------------------------------- Input -- */
 
+/**
+ * A ruled line, not a box. Boxes make a page look like a form; a baseline rule
+ * makes it look like something you write on. The rule thickens and takes the
+ * pencil colour on focus.
+ */
 export const inputClass = cx(
-  'w-full rounded-[10px] px-3 py-2 text-sm text-content',
-  'bg-[hsl(var(--surface)/0.6)] backdrop-blur-sm',
-  'border border-[hsl(var(--glass-border))]',
-  'shadow-[inset_0_1px_2px_hsl(240_30%_20%/0.04)]',
-  'placeholder:text-content-faint',
-  'transition-[border-color,box-shadow,background] duration-300 ease-out',
-  'hover:border-line-strong',
-  'focus:border-accent/60 focus:outline-none focus:bg-[hsl(var(--surface)/0.9)]',
-  'focus:shadow-[inset_0_1px_2px_hsl(240_30%_20%/0.04),0_0_0_4px_hsl(var(--accent)/0.12)]'
+  'w-full rounded-none border-0 border-b bg-transparent px-0 py-2 text-base text-ink',
+  'border-rule-strong placeholder:text-ink-faint',
+  'transition-[border-color,box-shadow] duration-DEFAULT ease-out',
+  'hover:border-ink-tertiary',
+  'focus:border-pencil focus:outline-none focus:shadow-[0_1px_0_0_hsl(var(--pencil))]'
 )
 
 export function Field ({ label, hint, error, children, htmlFor, aside }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={htmlFor} className="text-sm font-medium text-content">{label}</label>
+        <label htmlFor={htmlFor} className="label text-ink-tertiary">{label}</label>
         {aside}
       </div>
       {children}
-      {hint && !error && <p className="text-xs leading-relaxed text-content-tertiary">{hint}</p>}
-      {error && <p role="alert" className="text-xs text-danger">{error}</p>}
+      {hint && !error && <p className="pt-1.5 text-xs leading-relaxed text-ink-tertiary">{hint}</p>}
+      {error && <p role="alert" className="pt-1.5 text-xs text-pencil">{error}</p>}
     </div>
   )
 }
 
-/* --------------------------------------------------------------- Panel -- */
+/* --------------------------------------------------------- Editorial bits -- */
 
-export function Panel ({ title, action, children, className, hover = false }) {
+/** A standfirst: the small tracked label above a heading. */
+export function Eyebrow ({ children, className }) {
   return (
-    <motion.section
-      whileHover={hover ? { y: -3, transition: spring } : undefined}
-      className={cx('glass rounded-2xl', hover && 'sheen cursor-pointer', className)}
-    >
-      {(title || action) && (
-        <header className="flex items-center justify-between gap-3 px-5 pb-2 pt-4">
-          {title && (
-            <h2 className="text-[11px] font-medium uppercase tracking-[0.1em] text-content-tertiary">{title}</h2>
-          )}
-          {action}
-        </header>
-      )}
-      <div className={cx('px-5 pb-5', !title && 'pt-5')}>{children}</div>
-    </motion.section>
+    <p className={cx('label flex items-center gap-2.5 text-ink-tertiary', className)}>
+      <span aria-hidden="true" className="h-px w-6 bg-pencil" />
+      {children}
+    </p>
   )
+}
+
+export function Sheet ({ children, className, lifted = false }) {
+  return <div className={cx('sheet', lifted && 'sheet-lifted', className)}>{children}</div>
 }
 
 /* -------------------------------------------------------------- Reveal -- */
 
-/** Rises into place the first time it scrolls into view. Once, never again —
-    re-animating on every scroll pass is the fastest way to make motion annoying. */
+/**
+ * Rises into place the first time it scrolls into view.
+ *
+ * Degrades to plain visible content when motion is not wanted. Content that
+ * sits at opacity 0 waiting for an observer is content that can simply fail to
+ * appear — under reduced-motion, in print, or if the observer never fires.
+ * Hiding something until an animation rescues it is not a safe default.
+ */
 export function Reveal ({ children, delay = 0, className }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
+  const inView = useInView(ref, { once: true, margin: '-70px' })
+  const [reduced] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  )
+
+  if (reduced) return <div className={className}>{children}</div>
 
   return (
     <motion.div
@@ -117,11 +119,8 @@ export function Reveal ({ children, delay = 0, className }) {
       initial="hidden"
       animate={inView ? 'show' : 'hidden'}
       variants={{
-        hidden: { opacity: 0, y: 18, filter: 'blur(8px)' },
-        show: {
-          opacity: 1, y: 0, filter: 'blur(0px)',
-          transition: { type: 'spring', stiffness: 200, damping: 28, delay }
-        }
+        hidden: { opacity: 0, y: 22 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 170, damping: 26, delay } }
       }}
       className={className}
     >
@@ -142,19 +141,12 @@ export function Item ({ children, className }) {
   return <motion.div variants={riseIn} className={className}>{children}</motion.div>
 }
 
-/* -------------------------------------------------------------- Number -- */
+/* -------------------------------------------------------------- Counter -- */
 
-/**
- * Counts up to its value on mount.
- *
- * A number that arrives at its figure reads as measured; a number that is just
- * printed reads as static. Uses a spring so it decelerates into place instead
- * of ticking linearly.
- */
 export function Counter ({ value, className }) {
   const numeric = typeof value === 'number'
   const mv = useMotionValue(0)
-  const springy = useSpring(mv, { stiffness: 90, damping: 22, mass: 0.8 })
+  const springy = useSpring(mv, { stiffness: 80, damping: 22 })
   const rounded = useTransform(springy, (v) => Math.round(v).toLocaleString())
 
   useEffect(() => { if (numeric) mv.set(value) }, [value, numeric, mv])
@@ -166,11 +158,7 @@ export function Counter ({ value, className }) {
 /* -------------------------------------------------------- Async states -- */
 
 export function Skeleton ({ className }) {
-  return (
-    <div className={cx('relative overflow-hidden rounded-lg bg-[hsl(var(--text)/0.05)]', className)}>
-      <div className="absolute inset-y-0 w-1/3 animate-shimmer bg-gradient-to-r from-transparent via-[hsl(var(--text)/0.07)] to-transparent" />
-    </div>
-  )
+  return <div className={cx('animate-breathe rounded-sm bg-ink/10', className)} />
 }
 
 export function Loading ({ label = 'Loading', lines = 3 }) {
@@ -184,51 +172,39 @@ export function Loading ({ label = 'Loading', lines = 3 }) {
   )
 }
 
-export function Empty ({ icon, title, children, action }) {
+export function Empty ({ title, children, action }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={ease}
-      className="px-6 py-16 text-center"
+      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={ease}
+      className="border-t border-rule py-20"
     >
-      {icon && (
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          transition={{ ...spring, delay: 0.1 }}
-          className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl glass text-xl text-content-tertiary"
-          aria-hidden="true"
-        >
-          {icon}
-        </motion.div>
-      )}
-      <p className="display text-xl text-content">{title}</p>
-      {children && <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-content-tertiary">{children}</p>}
-      {action && <div className="mt-6 flex justify-center">{action}</div>}
+      <p className="display measure text-2xl text-ink">{title}</p>
+      {children && <p className="measure-tight mt-3 text-base leading-relaxed text-ink-tertiary">{children}</p>}
+      {action && <div className="mt-8">{action}</div>}
     </motion.div>
   )
 }
 
+/**
+ * Plain language, reason category, retry. The code is present but demoted —
+ * it is for the bug report, not for the creator.
+ */
 export function ErrorState ({ error, onRetry, className }) {
   if (!error) return null
 
   return (
     <motion.div
       role="alert"
-      initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={spring}
-      className={cx('glass rounded-2xl border-danger/25 p-4', className)}
+      initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={spring}
+      className={cx('border-l-2 border-pencil bg-pencil-soft py-3 pl-4 pr-3', className)}
     >
-      <div className="flex gap-3">
-        <span aria-hidden="true" className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-danger-soft text-danger">!</span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-content">{error.message}</p>
-          <p className="mt-1 font-mono text-[11px] text-content-tertiary">
-            {error.code}{error.correlationId ? ` · ${error.correlationId}` : ''}
-          </p>
-          {onRetry && error.retryable !== false && (
-            <Button size="sm" variant="glass" className="mt-3" onClick={onRetry}>Try again</Button>
-          )}
-        </div>
-      </div>
+      <p className="text-sm text-ink">{error.message}</p>
+      <p className="mt-1 font-mono text-micro tracking-normal text-ink-tertiary">
+        {error.code}{error.correlationId ? ` · ${error.correlationId}` : ''}
+      </p>
+      {onRetry && error.retryable !== false && (
+        <Button size="sm" variant="outline" className="mt-3" onClick={onRetry}>Try again</Button>
+      )}
     </motion.div>
   )
 }
@@ -236,26 +212,21 @@ export function ErrorState ({ error, onRetry, className }) {
 /* ----------------------------------------------------------------- Bits -- */
 
 const TONES = {
-  neutral: 'text-content-tertiary bg-[hsl(var(--text)/0.06)]',
-  accent: 'text-accent-text bg-accent-soft',
-  ai: 'text-ai bg-ai-soft',
-  creator: 'text-creator bg-creator-soft',
-  warn: 'text-warn bg-warn-soft',
-  danger: 'text-danger bg-danger-soft'
+  neutral: 'text-ink-tertiary',
+  pencil: 'text-pencil',
+  graphite: 'text-graphite',
+  sage: 'text-sage',
+  ochre: 'text-ochre'
 }
 
 export function Tag ({ tone = 'neutral', className, children }) {
-  return (
-    <span className={cx('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium', TONES[tone], className)}>
-      {children}
-    </span>
-  )
+  return <span className={cx('label', TONES[tone], className)}>{children}</span>
 }
 
 export function Status ({ children, tone = 'neutral', pulse = false }) {
-  const dot = { neutral: 'bg-content-faint', accent: 'bg-accent', ai: 'bg-ai', warn: 'bg-warn' }[tone]
+  const dot = { neutral: 'bg-ink-faint', pencil: 'bg-pencil', graphite: 'bg-graphite', sage: 'bg-sage' }[tone]
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-content-tertiary">
+    <span className="inline-flex items-center gap-2 text-xs text-ink-tertiary">
       <span aria-hidden="true" className="relative grid h-2 w-2 place-items-center">
         {pulse && <span className={cx('absolute h-2 w-2 animate-ping rounded-full opacity-60', dot)} />}
         <span className={cx('h-1.5 w-1.5 rounded-full', dot)} />
@@ -271,30 +242,31 @@ export function ThemeToggle () {
   const dark = theme === 'dark'
 
   return (
-    <Button
-      size="sm" variant="ghost"
+    <button
       aria-label={`Switch to ${dark ? 'light' : 'dark'} theme`}
       onClick={() => setTheme(toggleTheme())}
-      className="!px-2"
+      className="grid h-8 w-8 place-items-center text-ink-tertiary transition-colors hover:text-ink"
     >
       <motion.svg
         key={theme}
-        initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
-        animate={{ rotate: 0, opacity: 1, scale: 1 }}
-        transition={spring}
+        initial={{ rotate: -80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={spring}
         viewBox="0 0 16 16" className="h-4 w-4" fill="none"
-        stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true"
+        stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"
       >
         {dark
           ? <path d="M13.5 9.6A5.7 5.7 0 0 1 6.4 2.5a5.8 5.8 0 1 0 7.1 7.1Z" />
-          : (
-            <>
-              <circle cx="8" cy="8" r="3.1" />
-              <path d="M8 1v1.6M8 13.4V15M15 8h-1.6M2.6 8H1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1M12.9 12.9l-1.1-1.1M4.2 4.2 3.1 3.1" />
-            </>
-          )}
+          : (<><circle cx="8" cy="8" r="3" /><path d="M8 1v1.6M8 13.4V15M15 8h-1.6M2.6 8H1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1M12.9 12.9l-1.1-1.1M4.2 4.2 3.1 3.1" /></>)}
       </motion.svg>
-    </Button>
+    </button>
+  )
+}
+
+/** The wordmark. Set in the display face so the brand is the typography. */
+export function Wordmark ({ className }) {
+  return (
+    <span className={cx('display text-lg tracking-[-0.03em] text-ink', className)}>
+      Script<span className="text-pencil">.</span>
+    </span>
   )
 }
 

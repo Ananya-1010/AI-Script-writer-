@@ -40,8 +40,8 @@ export default function EvaluationPanel ({ scriptId, generationId, onSaved }) {
   if (saved) {
     return (
       <section>
-        <h2 className="mb-2 text-micro font-medium uppercase tracking-[0.08em] text-content-tertiary">Rated</h2>
-        <p className="text-xs leading-relaxed text-content-tertiary">
+        <h2 className="mb-2 text-micro font-medium uppercase tracking-[0.08em] text-ink-tertiary">Rated</h2>
+        <p className="text-xs leading-relaxed text-ink-tertiary">
           Scored. This feeds prompt and retrieval changes — nothing else.
         </p>
       </section>
@@ -51,17 +51,17 @@ export default function EvaluationPanel ({ scriptId, generationId, onSaved }) {
   return (
     <section>
       <div className="mb-2.5 flex items-baseline justify-between">
-        <h2 className="text-micro font-medium uppercase tracking-[0.08em] text-content-tertiary">
+        <h2 className="text-micro font-medium uppercase tracking-[0.08em] text-ink-tertiary">
           Rate this draft
         </h2>
-        <span className="text-micro tabular-nums text-content-faint">{done}/{total}</span>
+        <span className="text-micro tabular-nums text-ink-faint">{done}/{total}</span>
       </div>
 
       <form onSubmit={submit} className="space-y-3">
         {EVALUATION_CRITERIA.map((criterion) => (
           <div key={criterion.key}>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-content-secondary" title={criterion.hint}>
+              <span className="text-xs text-ink-secondary" title={criterion.hint}>
                 {criterion.label}
               </span>
               <Scale
@@ -73,8 +73,8 @@ export default function EvaluationPanel ({ scriptId, generationId, onSaved }) {
           </div>
         ))}
 
-        <div className="flex items-center justify-between gap-2 border-t border-line pt-3">
-          <span className="text-xs font-medium text-content">Overall</span>
+        <div className="flex items-center justify-between gap-2 border-t border-rule pt-3">
+          <span className="text-xs font-medium text-ink">Overall</span>
           <Scale label="Overall" value={humanRating} onChange={setHumanRating} />
         </div>
 
@@ -121,8 +121,8 @@ function Scale ({ label, value, onChange }) {
           <span
             className={`h-[9px] w-[9px] rounded-full border transition-all ease-out ${
               value >= n
-                ? 'border-accent bg-accent'
-                : 'border-line-strong bg-transparent group-hover:border-content-tertiary group-hover:scale-110'
+                ? 'border-pencil bg-pencil'
+                : 'border-rule-strong bg-transparent group-hover:border-content-tertiary group-hover:scale-110'
             }`}
           />
         </button>

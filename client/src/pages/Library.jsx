@@ -46,12 +46,12 @@ export default function Library () {
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl text-content">Library</h1>
-          <p className="mt-1.5 text-sm text-content-tertiary">
+          <h1 className="display text-3xl text-ink">Library</h1>
+          <p className="mt-1.5 text-sm text-ink-tertiary">
             {data ? `${data.total} script${data.total === 1 ? '' : 's'}` : 'Everything you have written.'}
           </p>
         </div>
-        <Button variant="primary" onClick={() => navigate('/workspace/new')}>New script</Button>
+        <Button variant="ink" onClick={() => navigate('/workspace/new')}>New script</Button>
       </header>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +71,7 @@ export default function Library () {
           placeholder="Any status" options={STATUSES} />
 
         {filtered && (
-          <Button size="sm" variant="ghost" onClick={clear}>Clear</Button>
+          <Button size="sm" variant="quiet" onClick={clear}>Clear</Button>
         )}
       </div>
 
@@ -87,7 +87,7 @@ export default function Library () {
           title={filtered ? 'Nothing matches those filters' : 'No scripts yet'}
           action={filtered
             ? <Button onClick={clear}>Clear filters</Button>
-            : <Button variant="primary" onClick={() => navigate('/workspace/new')}>Write one</Button>}
+            : <Button variant="ink" onClick={() => navigate('/workspace/new')}>Write one</Button>}
         >
           {filtered
             ? 'Try widening the search or clearing a filter.'
@@ -96,14 +96,14 @@ export default function Library () {
       )}
 
       {data && data.items.length > 0 && (
-        <ul className="divide-y divide-line border-y border-line">
+        <ul className="divide-y divide-rule border-y border-rule">
           {data.items.map((script) => (
             <li key={script.scriptId} className="group relative">
               <Link to={`/workspace/${script.scriptId}`} className="block py-3.5 pr-20">
-                <p className="truncate text-md text-content transition-colors group-hover:text-accent-text">
+                <p className="truncate text-md text-ink transition-colors group-hover:text-pencil">
                   {script.title}
                 </p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-content-tertiary">
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-tertiary">
                   <span>{script.platform}</span>
                   <Dot /><span>{script.contentType.replace('_', ' ')}</span>
                   <Dot /><span className="tabular-nums">{script.sectionCount} sections</span>
@@ -113,7 +113,7 @@ export default function Library () {
               </Link>
 
               <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-2">
-                <Status tone={script.status === 'SAVED' ? 'accent' : 'neutral'}>
+                <Status tone={script.status === 'SAVED' ? 'pencil' : 'neutral'}>
                   {script.status.toLowerCase().replace('_', ' ')}
                 </Status>
                 <Button
@@ -133,13 +133,13 @@ export default function Library () {
   )
 }
 
-const Dot = () => <span aria-hidden="true" className="text-content-faint">·</span>
+const Dot = () => <span aria-hidden="true" className="text-ink-faint">·</span>
 
 function Select ({ value, onChange, placeholder, options }) {
   return (
     <select
       aria-label={placeholder}
-      className={`${inputClass} w-auto ${value ? 'text-content' : 'text-content-tertiary'}`}
+      className={`${inputClass} w-auto ${value ? 'text-ink' : 'text-ink-tertiary'}`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >

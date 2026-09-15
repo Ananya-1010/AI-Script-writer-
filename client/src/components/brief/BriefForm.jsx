@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { PLATFORMS, CONTENT_TYPES } from '../../api/endpoints.js'
-import { Button, Field, inputClass, formatDuration } from '../ui.jsx'
+import { Button, Field, inputClass, Eyebrow, formatDuration } from '../ui.jsx'
 
 /**
- * The brief is an interview, not a form.
+ * A commissioning form, not a settings panel.
  *
- * It opens with the idea in the serif the script will be written in, because
- * that is the moment the creator is actually thinking. Platform and content
- * type are pressable cards rather than selects — they are a choice between
- * kinds of thing, and a dropdown hides the options at the moment you are
- * choosing between them.
+ * It opens with the idea set in the script's own serif, because that is the
+ * moment you are actually thinking. Platform and content type are pressable
+ * words rather than selects — they are a choice between kinds of thing, and a
+ * dropdown hides the options at the exact moment you are choosing.
  *
- * Generate stays disabled with the reason written out (spec 8.3). A grey
- * button with no explanation is the most common small cruelty in software.
+ * Generate stays disabled with the reason written out (spec 8.3). A grey button
+ * with no explanation is the most common small cruelty in software.
  */
 export default function BriefForm ({ profile, onSubmit, busy }) {
   const meta = (value) => PLATFORMS.find((p) => p.value === value)
@@ -40,8 +39,8 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
     setForm((f) => ({
       ...f,
       platform: value,
-      // Snap into the new range rather than leaving an invalid value for the
-      // creator to discover.
+      // Snap into the new range rather than leaving an invalid value to be
+      // discovered later.
       durationSeconds: Math.min(Math.max(f.durationSeconds, next.min), next.max)
     }))
   }
@@ -52,14 +51,14 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-10">
-      <section className="space-y-4">
+    <form onSubmit={submit} className="space-y-14">
+      <section className="space-y-8">
         <Field label="What is the idea?" htmlFor="idea"
           hint="A rough thought is enough. The more specific you are, the less you will have to fix.">
           <textarea
             id="idea" rows={3} autoFocus
             placeholder="explain lifestyle inflation with a concrete month-by-month example…"
-            className={`${inputClass} font-serif text-[17px] leading-relaxed`}
+            className={`${inputClass} font-script text-lg leading-relaxed`}
             value={form.idea}
             onChange={(e) => setForm({ ...form, idea: e.target.value })}
           />
@@ -72,49 +71,52 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
       </section>
 
       <Group label="Where is it going?" hint="Sets pacing, length and format conventions.">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-x-7 gap-y-2">
           {PLATFORMS.map((option) => (
-            <Chip
-              key={option.value}
-              active={form.platform === option.value}
-              onClick={() => changePlatform(option.value)}
-            >
+            <Word key={option.value} active={form.platform === option.value} onClick={() => changePlatform(option.value)}>
               {option.label}
-            </Chip>
+            </Word>
           ))}
         </div>
       </Group>
 
       <Group label="What kind of piece?" hint="Decides which sections the script must have.">
-        <div className="grid gap-1.5 sm:grid-cols-2">
-          {CONTENT_TYPES.map((option) => (
-            <Card
-              key={option.value}
-              active={form.contentType === option.value}
-              onClick={() => setForm({ ...form, contentType: option.value })}
-              title={option.label}
-              hint={option.hint}
-            />
-          ))}
+        <div className="divide-y divide-rule border-y border-rule">
+          {CONTENT_TYPES.map((option) => {
+            const active = form.contentType === option.value
+            return (
+              <button
+                key={option.value} type="button" aria-pressed={active}
+                onClick={() => setForm({ ...form, contentType: option.value })}
+                className="group flex w-full items-baseline gap-4 py-3.5 text-left"
+              >
+                <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${active ? 'bg-pencil' : 'bg-ink-faint/50 group-hover:bg-ink-tertiary'}`} />
+                <span className={`display text-lg transition-colors ${active ? 'text-ink' : 'text-ink-tertiary group-hover:text-ink-secondary'}`}>
+                  {option.label}
+                </span>
+                <span className="ml-auto hidden text-xs text-ink-tertiary sm:inline">{option.hint}</span>
+              </button>
+            )
+          })}
         </div>
       </Group>
 
       <Group label="How long?" hint={`${platform.label} works between ${formatDuration(platform.min)} and ${formatDuration(platform.max)}.`}>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <input
             id="duration" type="range" aria-label="Approximate length"
             min={platform.min} max={platform.max} step={platform.max > 600 ? 30 : 5}
-            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[hsl(var(--text)/0.08)] accent-accent"
+            className="h-[3px] flex-1 cursor-pointer appearance-none bg-ink/12 accent-pencil"
             value={form.durationSeconds}
             onChange={(e) => setForm({ ...form, durationSeconds: Number(e.target.value) })}
           />
-          <output className="w-20 shrink-0 text-right font-serif text-xl tabular-nums text-content">
+          <output className="display w-24 shrink-0 text-right text-2xl tabular-nums text-ink">
             {formatDuration(Number(form.durationSeconds))}
           </output>
         </div>
       </Group>
 
-      <section className="space-y-4">
+      <section className="space-y-8">
         <Field label="Who is it for?" htmlFor="audience"
           hint={profile?.audience ? 'Pre-filled from your profile. Override it for this script if it differs.' : 'Shapes reading level, examples and assumed knowledge.'}>
           <input id="audience" className={inputClass} placeholder="22-30, first job, India"
@@ -128,14 +130,12 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
         </Field>
       </section>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-line pt-6">
-        <Button type="submit" variant="primary" size="lg" disabled={busy || missing.length > 0}>
-          {busy ? 'Generating…' : 'Generate script'}
+      <div className="flex flex-wrap items-center gap-5 border-t border-rule pt-8">
+        <Button type="submit" variant="ink" size="lg" disabled={busy || missing.length > 0}>
+          {busy ? 'Generating…' : 'Generate the script'}
         </Button>
         {missing.length > 0 && (
-          <p className="text-sm text-content-tertiary">
-            Still needs {missing.join(', ')}.
-          </p>
+          <p className="text-sm text-ink-tertiary">Still needs {missing.join(', ')}.</p>
         )}
       </div>
     </form>
@@ -144,43 +144,30 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
 
 function Group ({ label, hint, children }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-5">
       <div>
-        <h3 className="text-sm font-medium text-content">{label}</h3>
-        {hint && <p className="mt-0.5 text-xs text-content-tertiary">{hint}</p>}
+        <Eyebrow>{label}</Eyebrow>
+        {hint && <p className="mt-2 text-xs text-ink-tertiary">{hint}</p>}
       </div>
       {children}
     </section>
   )
 }
 
-function Chip ({ active, onClick, children }) {
+/** A word you press, underlined in pencil when chosen. No pills, no chips. */
+function Word ({ active, onClick, children }) {
   return (
     <button
       type="button" onClick={onClick} aria-pressed={active}
-      className={`rounded-full px-3 py-1.5 text-sm transition ease-out ${
-        active
-          ? 'bg-content text-bg'
-          : 'glass text-content-secondary hover:text-content'
+      className={`display relative pb-1 text-lg transition-colors duration-DEFAULT ${
+        active ? 'text-ink' : 'text-ink-tertiary hover:text-ink-secondary'
       }`}
     >
       {children}
-    </button>
-  )
-}
-
-function Card ({ active, onClick, title, hint }) {
-  return (
-    <button
-      type="button" onClick={onClick} aria-pressed={active}
-      className={`rounded-md px-3 py-2.5 text-left transition ease-out ${
-        active
-          ? 'bg-accent-soft ring-1 ring-accent/40'
-          : 'glass hover:bg-[hsl(var(--glass-fill-strong))]'
-      }`}
-    >
-      <span className={`block text-sm font-medium ${active ? 'text-accent-text' : 'text-content'}`}>{title}</span>
-      <span className="mt-0.5 block text-xs text-content-tertiary">{hint}</span>
+      <span
+        aria-hidden="true"
+        className={`absolute bottom-0 left-0 h-[2px] bg-pencil transition-all duration-DEFAULT ease-out ${active ? 'w-full' : 'w-0'}`}
+      />
     </button>
   )
 }

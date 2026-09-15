@@ -62,8 +62,8 @@ export default function Profile () {
   return (
     <div className="mx-auto max-w-xl">
       <header className="mb-10">
-        <h1 className="font-serif text-3xl text-content">Your creator profile</h1>
-        <p className="mt-2 text-sm leading-relaxed text-content-tertiary">
+        <h1 className="display text-3xl text-ink">Your creator profile</h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink-tertiary">
           This is what makes a script sound like you rather than like anyone.
           You can skip it entirely and still generate. Changes apply to future
           generations only — never to a script you have already saved.
@@ -118,8 +118,8 @@ export default function Profile () {
                     onClick={() => togglePlatform(platform.value)}
                     className={`rounded-full px-3 py-1.5 text-sm transition ease-out ${
                       active
-                        ? 'bg-creator-soft text-creator ring-1 ring-creator/30'
-                        : 'glass text-content-secondary hover:text-content'
+                        ? 'bg-pencil-soft text-pencil ring-1 ring-pencil/30'
+                        : 'sheet text-ink-secondary hover:text-ink'
                     }`}
                   >
                     {platform.label}
@@ -134,7 +134,7 @@ export default function Profile () {
           <Field label="Something you have written" htmlFor="sample"
             hint="A style reference only. It is never reused as content inside a script.">
             <textarea id="sample" rows={4}
-              className={`${inputClass} font-serif text-[16px] leading-relaxed`}
+              className={`${inputClass} display text-[16px] leading-relaxed`}
               placeholder="Last month I tracked every rupee I spent…"
               value={form.sampleContent[0] ?? ''}
               onChange={(e) => setForm({ ...form, sampleContent: e.target.value ? [e.target.value] : [] })} />
@@ -143,9 +143,9 @@ export default function Profile () {
 
         <ErrorState error={error} />
 
-        <div className="flex items-center gap-3 border-t border-line pt-6">
-          <Button type="submit" variant="primary" size="lg">Save profile</Button>
-          <span aria-live="polite" className="text-sm text-ai">
+        <div className="flex items-center gap-3 border-t border-rule pt-6">
+          <Button type="submit" variant="ink" size="lg">Save profile</Button>
+          <span aria-live="polite" className="text-sm text-graphite">
             {saved ? 'Saved — this applies to your next generation.' : ''}
           </span>
         </div>
@@ -158,8 +158,8 @@ function Group ({ title, hint, children }) {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-sm font-medium text-content">{title}</h2>
-        {hint && <p className="mt-0.5 text-xs text-content-tertiary">{hint}</p>}
+        <h2 className="text-sm font-medium text-ink">{title}</h2>
+        {hint && <p className="mt-0.5 text-xs text-ink-tertiary">{hint}</p>}
       </div>
       {children}
     </section>
