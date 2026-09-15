@@ -12,9 +12,17 @@ export function notFoundHandler (req, res, next) {
  * (spec 5.7, 9.4).
  */
 export function errorHandler (err, req, res, _next) {
+  /**
+   * A Mongoose ValidationError means the *request* was bad, not the server.
+   * Letting it fall through as a 500 tells the client "retry, this is our
+   * fault" when retrying will fail identically forever. Route schemas should
+   * catch these first; this is the backstop for when the two disagree.
+   */
+  const schemaRejected = err?.name === 'ValidationError' && err?.errors
+
   const known = err instanceof AppError
-  const code = known ? err.code : 'INTERNAL_ERROR'
-  const status = known ? err.status : 500
+  const code = known ? err.code : schemaRejected ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR'
+  const status = known ? err.status : schemaRejected ? 400 : 500
 
   logger.error('request_failed', {
     requestId: req.requestId,
@@ -26,18 +34,24 @@ export function errorHandler (err, req, res, _next) {
     reason: err.message
   })
 
-  if (!known && process.env.NODE_ENV !== 'production') {
+  if (!known && !schemaRejected && process.env.NODE_ENV !== 'production') {
     // Unexpected errors still need to be debuggable locally.
     console.error(err)
   }
 
+  const message = known
+    ? err.message
+    : schemaRejected
+      ? Object.values(err.errors).map((e) => e.message).join('; ')
+      : 'Something went wrong. Please try again.'
+
   res.status(status).json({
     error: {
       code,
-      message: known ? err.message : 'Something went wrong. Please try again.',
+      message,
       requestId: req.requestId,
       correlationId: req.correlationId,
-      retryable: known ? err.retryable : ERROR_CODES.INTERNAL_ERROR.retryable
+      retryable: known ? err.retryable : schemaRejected ? false : ERROR_CODES.INTERNAL_ERROR.retryable
     }
   })
 }

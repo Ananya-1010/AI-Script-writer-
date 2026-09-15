@@ -1,56 +1,48 @@
-import { useEffect, useState } from 'react'
-import { api } from './api/client.js'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './state/AuthContext.jsx'
+import Layout from './components/Layout.jsx'
+import { Login, Register } from './pages/Auth.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import Workspace from './pages/Workspace.jsx'
+import Library from './pages/Library.jsx'
+import Profile from './pages/Profile.jsx'
+import { Loading } from './components/ui.jsx'
 
-/**
- * W1 placeholder. Its only job right now is to prove the chain the whole product
- * depends on: browser -> Node -> MongoDB, and Node -> AI service.
- * Real screens land from W5 (spec 5.5).
- */
-export default function App () {
-  const [ready, setReady] = useState(null)
-  const [error, setError] = useState(null)
+function Protected ({ children }) {
+  const { status } = useAuth()
 
-  useEffect(() => {
-    api.get('/health/ready').then(setReady).catch(setError)
-  }, [])
-
-  return (
-    <main className="mx-auto max-w-2xl p-8">
-      <h1 className="text-2xl font-semibold text-app">AI Script Writer</h1>
-      <p className="mt-1 text-slate-600">
-        Turn your idea into a script that fits your platform, audience, purpose, and voice.
-      </p>
-
-      <section className="mt-8 rounded-lg border border-slate-200 p-4">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500">
-          Service health
-        </h2>
-
-        {!ready && !error && <p className="mt-2 text-slate-500">Checking…</p>}
-
-        {error && (
-          <p className="mt-2 text-danger">
-            {error.message} <span className="text-slate-400">({error.code})</span>
-          </p>
-        )}
-
-        {ready && (
-          <dl className="mt-2 space-y-1 text-sm">
-            <Row label="Application API" value={ready.status} />
-            <Row label="MongoDB" value={ready.dependencies.mongodb} />
-            <Row label="AI service" value={ready.dependencies.aiService.reachable ? 'reachable' : 'unreachable'} />
-          </dl>
-        )}
-      </section>
-    </main>
-  )
+  // 'checking' is rendered, not skipped: without it every refresh flashes the
+  // login screen before the stored token has been verified.
+  if (status === 'checking') return <Loading label="Checking your session…" />
+  if (status !== 'authenticated') return <Navigate to="/login" replace />
+  return children
 }
 
-function Row ({ label, value }) {
+function Anonymous ({ children }) {
+  const { status } = useAuth()
+  if (status === 'checking') return <Loading />
+  if (status === 'authenticated') return <Navigate to="/" replace />
+  return children
+}
+
+export default function App () {
   return (
-    <div className="flex justify-between">
-      <dt className="text-slate-600">{label}</dt>
-      <dd className="font-mono text-slate-900">{value}</dd>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Anonymous><Login /></Anonymous>} />
+          <Route path="/register" element={<Anonymous><Register /></Anonymous>} />
+
+          <Route element={<Protected><Layout /></Protected>}>
+            <Route index element={<Dashboard />} />
+            <Route path="library" element={<Library />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="workspace/:id" element={<Workspace />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }

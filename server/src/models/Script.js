@@ -24,7 +24,10 @@ const briefSchema = new mongoose.Schema({
   idea: { type: String, required: true },
   platform: { type: String, enum: PLATFORMS, required: true },
   contentType: { type: String, enum: CONTENT_TYPES, required: true },
-  audience: { type: String, required: true },
+  // Optional by design. A creator who has not filled in an audience still gets
+  // a script; the prompt says so explicitly rather than inventing a persona.
+  // Requiring it here contradicted the zod schema, which defaults it to ''.
+  audience: { type: String, default: '' },
   objective: { type: String, required: true },
   durationSeconds: { type: Number, required: true }
 }, { _id: false })
