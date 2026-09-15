@@ -44,7 +44,30 @@ STRUCTURE_SPECS: dict[ContentType, str] = {
         "hook, at least one point section covering what it does and who it is "
         "for, then cta. Describe benefit through use, not adjectives."
     ),
+    # Replaced at assembly time by the creator's own description. This is the
+    # fallback if they somehow reach generation without one.
+    ContentType.custom: (
+        "hook, whatever body sections the piece genuinely needs, then cta. "
+        "Choose the section kinds that fit the material rather than forcing it "
+        "into a template."
+    ),
 }
+
+
+def custom_structure_spec(description: str) -> str:
+    """The structure spec when the creator described their own format.
+
+    The description is fenced as untrusted data like every other creator input.
+    It tells the model what *kind* of piece to write; it cannot tell the model
+    to ignore its instructions or change the output format.
+    """
+    return (
+        "The creator described the kind of piece they want. Build the section "
+        "structure that format genuinely needs — choose section kinds that fit "
+        "the material rather than forcing it into a template. It still opens "
+        "with a hook and ends with a cta.\n"
+        + fence("brief", description)
+    )
 
 
 PLATFORM_NOTES: dict[Platform, str] = {
@@ -110,15 +133,27 @@ def build_generation_prompt(
     platform = Platform(brief["platform"])
     budget = word_budget(int(brief["durationSeconds"]))
 
+    # customContentType is only meaningful for the custom type. Leaving it in
+    # the brief for a named type puts a contradictory second format description
+    # in front of the model for no reason.
+    presented = {
+        key: value for key, value in brief.items()
+        if key != "customContentType" or content_type is ContentType.custom
+    }
+
     parts = [
-        fence("brief", json.dumps(brief, indent=2, ensure_ascii=False)),
+        fence("brief", json.dumps(presented, indent=2, ensure_ascii=False)),
         "",
         _profile_block(profile),
         "",
         _context_block(chunks),
         "",
         "STRUCTURE FOR THIS CONTENT TYPE",
-        STRUCTURE_SPECS[content_type],
+        (
+            custom_structure_spec(brief["customContentType"])
+            if content_type is ContentType.custom and brief.get("customContentType")
+            else STRUCTURE_SPECS[content_type]
+        ),
         "",
         "PLATFORM",
         PLATFORM_NOTES[platform],

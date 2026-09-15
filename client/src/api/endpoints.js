@@ -51,8 +51,12 @@ export const CONTENT_TYPES = [
   { value: 'storytelling', label: 'Storytelling', hint: 'Carry a narrative arc' },
   { value: 'promotional', label: 'Promotional', hint: 'Problem to product to action' },
   { value: 'product_brand', label: 'Product or brand', hint: 'Show what it does, for whom' },
-  { value: 'short_form', label: 'Short form', hint: 'One idea, hook and CTA only' }
+  { value: 'short_form', label: 'Short form', hint: 'One idea, hook and CTA only' },
+  { value: 'custom', label: 'Something else', hint: 'Describe the format yourself' }
 ]
+
+/** Filters exclude 'custom' — it is a way to write, not a category to browse. */
+export const FILTERABLE_CONTENT_TYPES = CONTENT_TYPES.filter((c) => c.value !== 'custom')
 
 export const SECTION_LABELS = {
   hook: 'Hook',

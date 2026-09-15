@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { PLATFORMS, CONTENT_TYPES } from '../../api/endpoints.js'
 import { Button, Field, inputClass, Eyebrow, formatDuration } from '../ui.jsx'
 
@@ -22,6 +23,7 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
     idea: '',
     platform: defaultPlatform,
     contentType: 'educational',
+    customContentType: '',
     audience: profile?.audience ?? '',
     objective: '',
     durationSeconds: meta(defaultPlatform)?.default ?? 480
@@ -29,10 +31,15 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
 
   const platform = meta(form.platform)
 
+  const isCustom = form.contentType === 'custom'
+
   const missing = []
   if (!form.title.trim()) missing.push('a working title')
   if (form.idea.trim().length < 10) missing.push('a fuller idea')
   if (form.objective.trim().length < 3) missing.push('an objective')
+  // "Something else" only helps if they say what the something else is —
+  // otherwise choosing it would change nothing about the output.
+  if (isCustom && form.customContentType.trim().length < 3) missing.push('a description of the format')
 
   const changePlatform = (value) => {
     const next = meta(value)
@@ -99,6 +106,36 @@ export default function BriefForm ({ profile, onSubmit, busy }) {
             )
           })}
         </div>
+
+        {/* Revealed in place rather than on a second step — the answer belongs
+            next to the question that prompted it. */}
+        <AnimatePresence initial={false}>
+          {isCustom && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="border-l-2 border-brass pl-5 pt-5">
+                <Field
+                  label="What kind of piece is it?"
+                  htmlFor="customContentType"
+                  hint="This becomes the structure the script is built to, so name the format rather than the topic."
+                >
+                  <input
+                    id="customContentType"
+                    className={inputClass}
+                    placeholder="a two-person interview with cold-open, or a build-along devlog…"
+                    value={form.customContentType}
+                    onChange={(e) => setForm({ ...form, customContentType: e.target.value })}
+                  />
+                </Field>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Group>
 
       <Group label="How long?" hint={`${platform.label} works between ${formatDuration(platform.min)} and ${formatDuration(platform.max)}.`}>

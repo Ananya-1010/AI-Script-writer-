@@ -25,6 +25,10 @@ class ContentType(StrEnum):
     storytelling = "storytelling"
     product_brand = "product_brand"
     short_form = "short_form"
+    # Escape hatch: the creator describes the kind of piece themselves and that
+    # description becomes the structure spec. A closed list of five cannot cover
+    # interviews, reactions, tutorials, devlogs, or whatever comes next.
+    custom = "custom"
 
 
 class SectionKind(StrEnum):
@@ -116,5 +120,11 @@ REQUIRED_SECTIONS: dict[ContentType, dict] = {
     },
     ContentType.product_brand: {
         "kinds": {SectionKind.hook, SectionKind.point, SectionKind.cta}, "min_points": 1
+    },
+    # Deliberately the loosest contract we still call a script. We do not know
+    # the shape the creator described, so asserting a structure we invented
+    # would fail valid work. An opening and an ending is the floor.
+    ContentType.custom: {
+        "kinds": {SectionKind.hook, SectionKind.cta}, "min_points": 0
     },
 }

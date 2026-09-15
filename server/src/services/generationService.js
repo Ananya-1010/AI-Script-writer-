@@ -112,6 +112,7 @@ const briefFor = (script) => ({
   idea: script.brief.idea,
   platform: script.brief.platform,
   contentType: script.brief.contentType,
+  customContentType: script.brief.customContentType ?? '',
   audience: script.brief.audience ?? '',
   objective: script.brief.objective,
   durationSeconds: script.brief.durationSeconds

@@ -28,6 +28,9 @@ class Brief(BaseModel):
     idea: str = Field(min_length=1, max_length=5000)
     platform: Platform
     contentType: ContentType
+    # Only meaningful when contentType is "custom". Capped like every other
+    # field that reaches a prompt.
+    customContentType: str = Field(default="", max_length=200)
     audience: str = Field(max_length=500)
     objective: str = Field(min_length=1, max_length=500)
     durationSeconds: int = Field(ge=5, le=7200)

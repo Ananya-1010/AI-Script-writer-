@@ -7,7 +7,12 @@ export const CONTENT_TYPES = [
   'promotional',
   'storytelling',
   'product_brand',
-  'short_form'
+  'short_form',
+  // An escape hatch. A closed list of five cannot cover interviews, reactions,
+  // recipes, tutorials, devlogs, or whatever someone invents next — and a
+  // creator forced to pick the nearest wrong option gets the wrong structure.
+  // When this is chosen the brief carries a free-text description instead.
+  'custom'
 ]
 
 /** The permitted set is fixed; which kinds are *required* varies by content type. */
@@ -25,7 +30,11 @@ export const REQUIRED_SECTIONS = {
   educational: { kinds: ['hook', 'intro', 'point', 'transition', 'cta'], minPoints: 2 },
   promotional: { kinds: ['hook', 'point', 'cta'], minPoints: 1 },
   storytelling: { kinds: ['hook', 'story', 'cta'], minPoints: 0 },
-  product_brand: { kinds: ['hook', 'point', 'cta'], minPoints: 1 }
+  product_brand: { kinds: ['hook', 'point', 'cta'], minPoints: 1 },
+  // Deliberately the loosest contract we still consider a script. We do not
+  // know the shape the creator described, so asserting a structure we invented
+  // would fail valid work. A hook and an ending is the floor.
+  custom: { kinds: ['hook', 'cta'], minPoints: 0 }
 }
 
 /** Duration bounds per platform, so an impossible brief cannot be submitted (spec 8.3). */

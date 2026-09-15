@@ -12,10 +12,24 @@ export const briefSchema = z.object({
   idea: z.string().trim().min(10, 'needs at least a sentence').max(5000),
   platform: z.enum(PLATFORMS),
   contentType: z.enum(CONTENT_TYPES),
+  // Only meaningful when contentType is 'custom'. Capped like every other
+  // field that reaches a prompt.
+  customContentType: z.string().trim().max(200).default(''),
   audience: z.string().trim().max(500).default(''),
   objective: z.string().trim().min(3, 'is required').max(500),
   durationSeconds: z.number().int().positive()
 }).superRefine((brief, ctx) => {
+  // "Something else" is only useful if they say what the something else is.
+  // Without this the prompt would fall back to a generic structure and the
+  // creator would wonder why choosing it changed nothing.
+  if (brief.contentType === 'custom' && brief.customContentType.length < 3) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['customContentType'],
+      message: 'describe the kind of piece you want'
+    })
+  }
+
   // Duration is bounded by platform, so an impossible brief cannot be submitted
   // (spec 8.3) — a 40-minute Reel is not a generation the model should be asked
   // to attempt, and failing here costs nothing.

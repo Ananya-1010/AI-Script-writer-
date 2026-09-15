@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { scripts as scriptsApi, PLATFORMS, CONTENT_TYPES } from '../api/endpoints.js'
+import { scripts as scriptsApi, PLATFORMS, FILTERABLE_CONTENT_TYPES } from '../api/endpoints.js'
 import {
   Button, Empty, ErrorState, Loading, Status, Select, Confirm, Eyebrow, inputClass, Stagger, Item
 } from '../components/ui.jsx'
@@ -82,7 +82,7 @@ export default function Library () {
         </Filter>
 
         <Filter label="Type">
-          <Select label="Content type" placeholder="All types" options={CONTENT_TYPES}
+          <Select label="Content type" placeholder="All types" options={FILTERABLE_CONTENT_TYPES}
             value={filters.contentType} onChange={(v) => setFilters({ ...filters, contentType: v })} />
         </Filter>
 

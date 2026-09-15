@@ -342,7 +342,7 @@ export default function Workspace () {
             <Rail title="The brief" delay={0.05}>
               <dl className="space-y-1.5 text-xs">
                 <Row label="Platform" value={script.brief.platform} />
-                <Row label="Type" value={script.brief.contentType.replace('_', ' ')} />
+                <Row label="Type" value={script.brief.contentType === 'custom' ? (script.brief.customContentType || 'custom') : script.brief.contentType.replace('_', ' ')} />
                 <Row label="Audience" value={script.brief.audience || '—'} />
                 <Row label="Length" value={formatDuration(script.brief.durationSeconds)} />
               </dl>
