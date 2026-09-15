@@ -128,6 +128,124 @@ class InMemoryVectorStore:
         return True
 
 
+class MongoLocalVectorStore:
+    """Chunks in a local MongoDB, similarity computed here.
+
+    `$vectorSearch` is an Atlas-only aggregation stage — a local mongod answers
+    it with `SearchNotEnabled`, whatever its version. So on a local database the
+    index lives in Mongo and the scoring happens in this process.
+
+    Exact brute force, not an approximation. At this product's scale that is the
+    right call rather than a compromise: a curated knowledge base plus one
+    creator's documents is hundreds to a few thousand chunks, and scoring a few
+    thousand vectors in numpy is single-digit milliseconds. Exact search also
+    removes ANN recall as a variable while the retrieval thresholds are still
+    being calibrated.
+
+    The tenant filter still lives in the query. Only curated chunks and this
+    creator's own chunks are ever read out of the database, so no other
+    creator's text enters the process, exactly as with Atlas.
+
+    Ceiling: every query transfers the in-scope embeddings. Past roughly 20k
+    chunks that transfer, not the maths, becomes the bottleneck — at which point
+    this should move to Atlas rather than grow a cache.
+    """
+
+    name = "mongo-local"
+
+    def __init__(self, uri: str, db_name: str) -> None:
+        try:
+            from motor.motor_asyncio import AsyncIOMotorClient
+        except ImportError as exc:  # pragma: no cover
+            raise ServiceError("INTERNAL_ERROR", "Vector store is not configured.") from exc
+
+        self._client = AsyncIOMotorClient(uri)
+        self._col = self._client[db_name]["knowledge_chunks"]
+
+    async def ensure_indexes(self) -> None:
+        # No vector index to build; these are what keep the scope query and
+        # document deletion from scanning the collection.
+        await self._col.create_index("chunkId", unique=True)
+        await self._col.create_index("documentId")
+        await self._col.create_index("userId")
+
+    async def upsert(self, chunks: list[Chunk], vectors: list[list[float]]) -> None:
+        from pymongo import ReplaceOne
+
+        operations = [
+            ReplaceOne(
+                {"chunkId": chunk.chunk_id},
+                {
+                    "chunkId": chunk.chunk_id,
+                    "documentId": chunk.document_id,
+                    "userId": chunk.user_id,
+                    "source": chunk.source,
+                    "category": chunk.category,
+                    "text": chunk.text,
+                    "embedding": vector,
+                },
+                upsert=True,
+            )
+            for chunk, vector in zip(chunks, vectors)
+        ]
+        if operations:
+            await self._col.bulk_write(operations, ordered=False)
+
+    async def delete_document(self, document_id: str) -> int:
+        result = await self._col.delete_many({"documentId": document_id})
+        return result.deleted_count
+
+    async def search(
+        self, vector: list[float], *, user_id: str | None, top_k: int
+    ) -> list[RetrievedChunk]:
+        import numpy as np
+
+        scope: dict = (
+            {"userId": None}
+            if user_id is None
+            else {"$or": [{"userId": None}, {"userId": user_id}]}
+        )
+
+        try:
+            rows = await self._col.find(
+                scope, {"_id": 0, "chunkId": 1, "source": 1, "category": 1, "text": 1, "embedding": 1}
+            ).to_list(length=None)
+        except Exception as exc:
+            log.warning("vector_scan_failed", extra={"store": self.name})
+            raise ServiceError("RETRIEVAL_FAILED", "Knowledge lookup failed.") from exc
+
+        if not rows:
+            return []
+
+        matrix = np.asarray([row["embedding"] for row in rows], dtype=np.float32)
+        query = np.asarray(vector, dtype=np.float32)
+
+        # Vectors arrive L2-normalised from the embedding provider, so a single
+        # matrix-vector product is cosine for every chunk at once.
+        cosines = matrix @ query
+        scores = (1.0 + cosines) / 2.0  # same scale Atlas reports
+
+        top = np.argsort(-scores)[:top_k]
+
+        return [
+            RetrievedChunk(
+                chunk_id=rows[i]["chunkId"],
+                source=rows[i]["source"],
+                category=rows[i]["category"],
+                text=rows[i]["text"],
+                score=float(scores[i]),
+            )
+            for i in top
+        ]
+
+    async def health(self) -> bool:
+        try:
+            await self._client.admin.command("ping")
+            return True
+        except Exception:
+            return False
+
+
 class MongoAtlasVectorStore:
     """MongoDB Atlas Vector Search.
 
@@ -243,9 +361,20 @@ class MongoAtlasVectorStore:
 
 
 def build_vector_store() -> VectorStore:
+    """memory  -> tests and throwaway runs, nothing persisted
+    mongo-local -> a local mongod: chunks persisted, similarity computed here
+    atlas       -> Atlas Vector Search, the production path
+
+    All three return scores on the same scale, so RETRIEVAL_MIN_SCORE means the
+    same thing whichever is in use and moving between them is a config change.
+    """
     if settings.vector_store == "memory":
         return InMemoryVectorStore()
-    if settings.vector_store == "mongo":
+    if settings.vector_store == "mongo-local":
+        return MongoLocalVectorStore(
+            uri=settings.ai_mongodb_uri, db_name=settings.ai_mongodb_db
+        )
+    if settings.vector_store == "atlas":
         return MongoAtlasVectorStore(
             uri=settings.ai_mongodb_uri,
             db_name=settings.ai_mongodb_db,

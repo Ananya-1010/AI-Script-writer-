@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
+    "db:setup": "node scripts/setup-db.mjs",
     "test": "node --test --test-concurrency=1 tests/auth.test.js tests/isolation.test.js"
   },
   "dependencies": {

@@ -46,10 +46,17 @@ so day-to-day development makes no API calls and costs nothing.
 docker compose up --build
 ```
 
-**Without Docker** — three terminals, plus a MongoDB on `localhost:27017`:
+**Without Docker** — a MongoDB on `localhost:27017`, then:
 
 ```bash
-cd server     && npm install && npm run dev      # http://localhost:4000
+cd server && npm install && npm run db:setup     # creates indexes; safe to re-run
+```
+
+`db:setup` also reports whether this MongoDB supports Atlas Vector Search and
+tells you which `VECTOR_STORE` to use. Then three terminals:
+
+```bash
+cd server     && npm run dev                     # http://localhost:4000
 cd ai-service && pip install -r requirements.txt && uvicorn app.main:app --reload
 cd client     && npm install && npm run dev      # http://localhost:5173
 ```
@@ -60,8 +67,35 @@ Check the chain is alive:
 curl http://localhost:4000/api/v1/health/ready
 ```
 
-It reports MongoDB and AI-service reachability together — if the app can't
-generate, this says which hop is down.
+It reports MongoDB, the AI service, and the vector store together — if the app
+can't generate, this says which hop is down.
+
+### Vector search on a local MongoDB
+
+`$vectorSearch` is an **Atlas-only** aggregation stage. A local `mongod` answers
+it with `SearchNotEnabled` regardless of version, so there are three stores and
+`VECTOR_STORE` picks one:
+
+| Value | Where chunks live | How similarity is computed |
+| --- | --- | --- |
+| `memory` | nowhere | in process, exact. Tests only |
+| `mongo-local` | local MongoDB | in the AI service, exact (numpy) |
+| `atlas` | Atlas | `$vectorSearch`, approximate |
+
+All three return scores on the **same normalised scale** — `(1 + cosine) / 2`,
+where `0.5` means unrelated — so `RETRIEVAL_MIN_SCORE` means the same thing
+whichever is in use, and moving between them is a config change. `mongo-local`
+does exact brute force, which is correct and fast to roughly 20k chunks; past
+that, the per-query transfer is the bottleneck and it should move to Atlas.
+
+### Tests
+
+```bash
+cd server && npm test        # integration, real MongoDB in memory
+pytest                       # retrieval; Mongo-backed tests skip if none is running
+```
+
+No test calls a provider. The suite is offline and free by construction.
 
 ---
 
@@ -103,5 +137,7 @@ scripts/     seed-knowledge.js — build and embed the curated knowledge base
 
 ## Status
 
-**W1 — Foundation.** Repo scaffold, all six data models, both services booting
-and talking to each other. No generation yet; that arrives in W4.
+**W2 — Identity, done.** Register, login, `/auth/me`, creator profile CRUD, and
+a repository layer that makes `userId` a mandatory first argument on every query.
+The LLM, embedding and vector-store providers are all behind swappable
+interfaces with stub and real implementations. No generation yet; that is W4.
