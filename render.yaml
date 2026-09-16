@@ -1,0 +1,101 @@
+# Render blueprint — both services in one file.
+#
+#   New > Blueprint > pick this repo. Render reads this, creates both services,
+#   and prompts for the values marked `sync: false`.
+#
+# Why both are Docker services: the Dockerfiles are already the local
+# development contract (docker-compose uses them), so deployment runs the same
+# image path that has been exercised all along rather than a second, untested
+# build recipe.
+
+services:
+  # --------------------------------------------------------------- AI service
+  - type: web
+    name: asw-ai
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: ai-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /internal/health
+    envVars:
+      # Must match AI_SERVICE_TOKEN on the application service. This is the only
+      # thing standing between the open internet and the generation endpoints,
+      # because Render's free tier has no private networking — every service
+      # gets a public URL. Generate a long random value.
+      - key: AI_SERVICE_TOKEN
+        generateValue: true
+
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-3.5-flash-lite
+      - key: LLM_API_KEY
+        sync: false            # paste your Google AI Studio key
+      - key: LLM_TIMEOUT_S
+        value: "90"
+
+      - key: EMBEDDING_PROVIDER
+        value: stub            # retrieval is off until W3; no embedding spend yet
+      - key: EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: EMBEDDING_DIMENSIONS
+        value: "768"
+
+      - key: RETRIEVAL_ENABLED
+        value: "false"
+      - key: RETRIEVAL_TOP_K
+        value: "6"
+      - key: RETRIEVAL_MIN_SCORE
+        value: "0.70"
+      - key: PROMPT_TOKEN_CAP
+        value: "6000"
+
+      # mongo-local is not a "local only" store — it means similarity is
+      # computed in this service rather than by $vectorSearch. It works against
+      # Atlas exactly as it does against a local mongod, and it avoids having to
+      # provision an Atlas Search index before there is anything to search.
+      - key: VECTOR_STORE
+        value: mongo-local
+      - key: AI_MONGODB_URI
+        sync: false            # same Atlas connection string as below
+      - key: AI_MONGODB_DB
+        value: ai_script_writer
+
+  # ------------------------------------------------------- application service
+  - type: web
+    name: asw-api
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: server
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false            # Atlas connection string, database ai_script_writer
+      - key: JWT_SECRET
+        generateValue: true
+
+      # Full URL including the scheme, e.g. https://asw-ai.onrender.com
+      # fromService can supply the host but not a scheme, and the client builds
+      # absolute URLs, so this is pasted once after the AI service is created.
+      - key: AI_SERVICE_URL
+        sync: false
+      # Must be the same value Render generated for the AI service. Render
+      # cannot copy a generated secret between services, so paste it once.
+      - key: AI_SERVICE_TOKEN
+        sync: false
+      - key: AI_SERVICE_TIMEOUT_MS
+        value: "140000"
+
+      # The deployed client origin, for CORS. Set this after the site is live.
+      - key: CLIENT_ORIGIN
+        sync: false
+
+      - key: GENERATION_RATE_LIMIT_PER_MIN
+        value: "5"
+      - key: GENERATION_QUOTA_PER_DAY
+        value: "50"

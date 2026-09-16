@@ -135,6 +135,13 @@ docs/        architecture.md · api-reference.md · model-card.md · knowledge-b
 scripts/     seed-knowledge.js — build and embed the curated knowledge base
 ```
 
+## Deploying
+
+MongoDB Atlas (free M0) · Render for both services (`render.yaml` blueprint at
+the repo root) · Cloudflare Pages for the client. All free tiers, no card.
+
+Full walkthrough with every environment variable: **[`docs/deploy.md`](docs/deploy.md)**.
+
 ## Status
 
 **W2 — Identity, done.** Register, login, `/auth/me`, creator profile CRUD, and
