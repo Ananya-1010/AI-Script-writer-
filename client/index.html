@@ -4,7 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
-    <title>AI Script Writer</title>
+
+    <title>AI Script Writer — a scripting workspace for content creators</title>
+    <meta
+      name="description"
+      content="Turn your idea into a script that fits your platform, audience, purpose and voice. AI Script Writer combines creator context, retrieved scripting knowledge, structured generation and scoped refinement — so you get a structured first draft instead of a blank page, and stay the author throughout."
+    />
+    <link rel="canonical" href="/" />
+
+    <!-- Link previews, and what a crawler reads first. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="AI Script Writer" />
+    <meta property="og:site_name" content="AI Script Writer" />
+    <meta
+      property="og:description"
+      content="A blank page is not a writing problem, it is a structure problem. Get a first draft that already has a hook, a shape and an ending — in your voice, on your platform."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <script>
       // Runs before first paint. Deciding the theme in a React effect instead
       // means every dark-mode user gets a white flash on every load.
@@ -23,6 +40,88 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!--
+      Without this, a client-rendered SPA hands a crawler an empty div: the
+      built page contained sixteen characters of real text. Anything that does
+      not run JavaScript — a link unfurler, a reader mode, an LLM fetching the
+      URL — saw nothing about the product at all.
+
+      This is the page's substance in plain semantic HTML. It is not SEO
+      padding: every claim here is one the product actually makes, and it is
+      kept in step with the landing page copy.
+    -->
+    <noscript>
+      <main>
+        <h1>AI Script Writer</h1>
+        <p>
+          An AI-powered scripting workspace for content creators, influencers
+          and social media managers. Turn your idea into a script that fits your
+          platform, audience, purpose and voice.
+        </p>
+
+        <h2>The problem</h2>
+        <p>
+          A general chatbot writes like nobody in particular, because it knows
+          nothing about you. Every session starts from an empty prompt box, you
+          re-explain your niche, audience, tone and platform, and you get back
+          something fluent and generic that you then rewrite from scratch. The
+          time was never in the typing — it was in deciding what to say, how to
+          open, and how to end.
+        </p>
+
+        <h2>How it works</h2>
+        <ol>
+          <li>
+            <strong>Tell it who you are, once.</strong> Niche, audience, tone,
+            the things you never do. Every script after that carries them.
+          </li>
+          <li>
+            <strong>Give it a rough idea</strong>, plus the platform, the
+            objective and roughly how long. The objective becomes an invariant:
+            nothing downstream is allowed to drift from it.
+          </li>
+          <li>
+            <strong>Get a structured draft.</strong> Hook, intro, points,
+            transitions, call to action — typed sections, never a wall of text,
+            and every one of them editable.
+          </li>
+          <li>
+            <strong>Refine without losing it.</strong> Improve the hook and only
+            the hook. Change tone and keep every fact. Shorten by cutting the
+            weakest idea rather than trimming evenly.
+          </li>
+        </ol>
+
+        <h2>What it will not do</h2>
+        <ul>
+          <li>It will not publish for you. No auto-posting, no scheduling, no pretending a draft is finished.</li>
+          <li>It will not invent a statistic. If a point needs a number you have to supply, it says so instead of making one up.</li>
+          <li>It will not predict virality. Nobody can, and a tool that claims to is selling something.</li>
+          <li>It will not quietly rewrite you. Improvements are scoped; anything you did not ask it to touch comes back byte-identical.</li>
+        </ul>
+
+        <h2>Supported platforms</h2>
+        <p>YouTube, Instagram Reels, TikTok, LinkedIn, YouTube Shorts and podcasts.</p>
+
+        <h2>How it is built</h2>
+        <p>
+          A React workspace, a Node and Express application service owning auth
+          and persistence, and a Python FastAPI service owning everything
+          model-adjacent: retrieval, prompt construction, LLM invocation and
+          structured-output validation. MongoDB is the single source of truth.
+          Full technical documentation, including the architecture and design
+          systems, is in the repository.
+        </p>
+
+        <p>
+          <a href="https://github.com/Ananya-1010/AI-Script-writer-">
+            Source code and documentation on GitHub
+          </a>
+        </p>
+      </main>
+    </noscript>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

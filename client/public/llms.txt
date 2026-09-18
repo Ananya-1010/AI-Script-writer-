@@ -1,0 +1,98 @@
+# AI Script Writer
+
+> An AI-powered scripting workspace for content creators. It turns a raw content
+> idea into a structured, platform-appropriate, editable script — combining the
+> creator's own context, retrieved scripting knowledge, structured generation and
+> scoped refinement. The creator remains the author throughout; the product makes
+> drafts, never publications.
+
+This file follows the llms.txt convention: a plain-text summary for language
+models reading this site. The interface itself is a client-rendered React app,
+so fetching a page URL returns markup rather than content — read this instead.
+
+## What it is
+
+Content creators publish script-driven content continuously across YouTube,
+Instagram Reels, TikTok and LinkedIn. Most of the effort is not recording or
+editing — it is deciding what to say, how to open, how to structure the piece,
+and how to keep a consistent voice while doing it repeatedly.
+
+General-purpose chat tools produce generic output because they carry no
+creator-specific context, no reusable content knowledge and no structured
+scripting workflow. AI Script Writer combines four things a chat interface does
+not: **creator context, retrieved content knowledge, structured generation, and
+iterative refinement.**
+
+Core promise: *turn your idea into a script that fits your platform, audience,
+purpose, and voice.*
+
+## The workflow
+
+1. **Creator profile**, set once — niche, audience, tone, preferred platforms,
+   style preferences. It feeds directly into prompt construction.
+2. **Content brief** — idea, platform, content type, audience, objective and
+   approximate duration. Validated before any generation is attempted.
+3. **Generation** — a structured script with typed sections (hook, intro, point,
+   story, support, transition, CTA, visual cue), appropriate to the platform and
+   content type.
+4. **Refinement** — manual editing, full regeneration, targeted improvement
+   (improve the hook, change tone, shorten, expand) and multiple variations.
+5. **Library and dashboard** — versioned scripts with search and filter, plus
+   counts, recent activity and breakdowns.
+6. **Evaluation** — every generation is scoreable on six criteria plus an
+   overall human rating.
+
+## Load-bearing product rules
+
+- **The creator is the author.** Drafts, never publications. No auto-publishing,
+  no virality prediction. AI-written and creator-edited text stay visually
+  distinguishable at every stage.
+- **The objective is an invariant.** The brief captured before generation is
+  re-sent verbatim on every regeneration, improvement and variation. Only the
+  creator can change it.
+- **Retrieval never gates generation.** If nothing clears the relevance
+  threshold, the system generates without retrieved context rather than padding
+  the prompt with weak matches.
+- **Structured output or a typed error.** Every model response is validated
+  against a schema before it can reach the creator. Raw model text is never
+  presented as a draft.
+- **A failed generation never corrupts a saved script.** It records the failure
+  and offers a retry; the previously saved script is untouched.
+- **Tenant isolation is enforced at the data layer.** Every repository method
+  takes a user id as its first argument. Cross-tenant access returns 404, never
+  403, so the API does not confirm another creator's resource exists.
+
+## Architecture
+
+Three tiers, and one rule that decides where code goes: *if a decision changes
+when a prompt changes it belongs in Python; if it changes when the product
+changes it belongs in Node.*
+
+- **client/** — React, Tailwind, Axios. Brief capture, workspace state machine,
+  section-level editor, library, dashboard.
+- **server/** — Node and Express. Authentication, all persistence, validation,
+  dashboard aggregation, and orchestration of the AI service. The only service
+  the browser talks to. It also serves the built client, so the app and its API
+  share one origin.
+- **ai-service/** — Python and FastAPI. Chunking, embedding, retrieval, prompt
+  construction, LLM invocation, output validation. Never publicly routed in a
+  full deployment; stateless with respect to the creator.
+- **MongoDB** — the single source of truth. The vector index is derived and
+  rebuildable.
+
+## Source and documentation
+
+Repository: https://github.com/Ananya-1010/AI-Script-writer-
+
+- `README.md` — what it is, how to run it, the non-negotiables
+- `docs/architecture.md` — design decisions and trade-offs
+- `docs/design.md` — the editorial design system and its reasoning
+- `docs/deploy.md` — deployment
+
+For a full understanding of the project, read the repository rather than
+scraping this site: the interface is client-rendered and the documentation is
+more complete than anything a page fetch will return.
+
+## Author
+
+Ananya Chavhan. Built as a Generative AI project over a twelve-week timeline.
