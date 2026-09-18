@@ -72,14 +72,30 @@ try {
   atlasSearch = true
 } catch { /* expected on a local server */ }
 
-const recommended = atlasSearch ? 'atlas' : 'mongo-local'
+/**
+ * Capability is not the same as readiness.
+ *
+ * The probe above only proves the server understands `$vectorSearch`. It does
+ * not prove a vector index exists — and `atlas` without one retrieves nothing,
+ * silently, which is the exact failure mode the whole retrieval design is built
+ * to avoid. Recommending `atlas` on capability alone was actively misleading.
+ */
 const current = process.env.VECTOR_STORE ?? '(unset)'
 
-console.log(`\nvector search  ${atlasSearch ? 'Atlas Vector Search available' : 'not available here (local mongod)'}`)
-console.log(`VECTOR_STORE   recommended: ${recommended}   current: ${current}`)
+console.log(`\nvector search  ${atlasSearch
+  ? 'Atlas Vector Search is supported by this cluster'
+  : 'not available here (local mongod) — $vectorSearch is Atlas-only'}`)
+console.log(`VECTOR_STORE   current: ${current}`)
 
-if (current !== recommended) {
-  console.log(`\n  warning: set VECTOR_STORE=${recommended} in .env`)
+if (atlasSearch) {
+  console.log('\n  mongo-local is still correct until a vector index exists.')
+  console.log('  It computes similarity in the AI service and works against')
+  console.log('  Atlas exactly as against a local mongod. Switch to `atlas`')
+  console.log('  only once the index is created and the knowledge base is')
+  console.log('  embedded, or retrieval will return nothing without erroring.')
+} else if (current === 'atlas') {
+  console.log('\n  warning: VECTOR_STORE=atlas but this server cannot serve it.')
+  console.log('  Use mongo-local.')
 }
 
 await mongoose.disconnect()
