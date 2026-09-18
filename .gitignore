@@ -20,6 +20,9 @@ venv/
 dist/
 build/
 client/dist/
+# The built client, copied in by the Docker build so the Node service can serve
+# it. A build artifact, never a source file.
+server/public/
 *.tsbuildinfo
 
 # logs / local data

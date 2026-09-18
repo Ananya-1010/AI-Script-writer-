@@ -1,12 +1,16 @@
-# Render blueprint — both services in one file.
+# Render blueprint — the whole product, two services, one platform.
 #
 #   New > Blueprint > pick this repo. Render reads this, creates both services,
 #   and prompts for the values marked `sync: false`.
 #
-# Why both are Docker services: the Dockerfiles are already the local
-# development contract (docker-compose uses them), so deployment runs the same
-# image path that has been exercised all along rather than a second, untested
-# build recipe.
+# Why two and not three: the Node service also serves the built client, so the
+# app and its API share one origin. That removes CORS, removes a second host,
+# and removes a build-time API URL that has to stay in sync with it.
+#
+# Why two and not one: Node and Python are different runtimes, and the split is
+# the point of the architecture — prompts and retrieval are tuned weekly while
+# auth and CRUD are not, so the AI service must redeploy without touching the
+# application the creator is logged into.
 
 services:
   # --------------------------------------------------------------- AI service
@@ -22,7 +26,7 @@ services:
       # Must match AI_SERVICE_TOKEN on the application service. This is the only
       # thing standing between the open internet and the generation endpoints,
       # because Render's free tier has no private networking — every service
-      # gets a public URL. Generate a long random value.
+      # gets a public URL.
       - key: AI_SERVICE_TOKEN
         generateValue: true
 
@@ -53,8 +57,8 @@ services:
 
       # mongo-local is not a "local only" store — it means similarity is
       # computed in this service rather than by $vectorSearch. It works against
-      # Atlas exactly as it does against a local mongod, and it avoids having to
-      # provision an Atlas Search index before there is anything to search.
+      # Atlas exactly as against a local mongod, so no Atlas Search index is
+      # needed before retrieval is switched on.
       - key: VECTOR_STORE
         value: mongo-local
       - key: AI_MONGODB_URI
@@ -62,14 +66,16 @@ services:
       - key: AI_MONGODB_DB
         value: ai_script_writer
 
-  # ------------------------------------------------------- application service
+  # ------------------------------------------- application service + the site
   - type: web
-    name: asw-api
+    name: asw
     runtime: docker
     plan: free
     region: oregon
-    rootDir: server
-    dockerfilePath: ./Dockerfile
+    # Repo root, because the Dockerfile builds client/ as well as server/.
+    rootDir: .
+    dockerContext: .
+    dockerfilePath: ./server/Dockerfile
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
@@ -81,19 +87,21 @@ services:
 
       # Full URL including the scheme, e.g. https://asw-ai.onrender.com
       # fromService can supply the host but not a scheme, and the client builds
-      # absolute URLs, so this is pasted once after the AI service is created.
+      # absolute URLs, so this is pasted once after the AI service exists.
       - key: AI_SERVICE_URL
         sync: false
-      # Must be the same value Render generated for the AI service. Render
-      # cannot copy a generated secret between services, so paste it once.
+      # Must be the value Render generated on asw-ai. Render cannot copy a
+      # generated secret between services, so paste it once.
       - key: AI_SERVICE_TOKEN
         sync: false
       - key: AI_SERVICE_TIMEOUT_MS
         value: "140000"
 
-      # The deployed client origin, for CORS. Set this after the site is live.
+      # The site is served from this same service, so there is no cross-origin
+      # request to allow. Left pointing at the local dev client, which is the
+      # only origin that ever needs it.
       - key: CLIENT_ORIGIN
-        sync: false
+        value: http://localhost:5173
 
       - key: GENERATION_RATE_LIMIT_PER_MIN
         value: "5"
